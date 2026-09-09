@@ -1,4 +1,14 @@
-# Handy
+# Handy Remote
+
+> **This is a fork of [cjpais/Handy](https://github.com/cjpais/Handy)** that adds
+> optional **remote transcription**: send recordings to a cloud or self-hosted
+> speech-to-text API — for example
+> [`microsoft/mai-transcribe-2`](https://openrouter.ai/microsoft/mai-transcribe-2)
+> on OpenRouter — instead of transcribing locally. It is off by default, so
+> upstream behavior is unchanged until you turn it on.
+>
+> See **[docs/REMOTE_TRANSCRIPTION.md](docs/REMOTE_TRANSCRIPTION.md)** for setup,
+> behavior, and privacy notes. Everything below is upstream's README.
 
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/WVBeWsNXK4)
 
@@ -31,6 +41,10 @@ The process is entirely local:
   - **Whisper models** (Small/Medium/Turbo/Large) with GPU acceleration when available
   - **Parakeet V3** - CPU-optimized model with excellent performance and automatic language detection
 - Works on Windows, macOS, and Linux
+
+In this fork the local path above is still the default. Transcription only leaves
+your machine if you explicitly enable
+[remote transcription](docs/REMOTE_TRANSCRIPTION.md).
 
 ## Quick Start
 
