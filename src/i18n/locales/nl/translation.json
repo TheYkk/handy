@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Afsluiten",
     "cancel": "Annuleren",
-    "secureInputWarning": "⚠ Sneltoetsen geblokkeerd door Secure Input"
+    "secureInputWarning": "⚠ Sneltoetsen geblokkeerd door Secure Input",
+    "modeRemote": "Extern: {{provider}}",
+    "modeLocal": "Lokaal: {{model}}"
   },
   "sidebar": {
     "general": "Algemeen",
@@ -627,6 +629,52 @@
           "description": "Krachtige tensorbibliotheek voor lokale AI-verwerking",
           "details": "Handy's lokale spraak-naar-tekst is gebouwd op transcribe.cpp en ggml. Met dank aan het geweldige werk van Georgi Gerganov en alle bijdragers."
         }
+      }
+    },
+    "remoteTranscription": {
+      "title": "Externe transcriptie",
+      "enable": {
+        "label": "Een extern model gebruiken",
+        "description": "Stuur opnames naar een spraak-naar-tekst-API in de cloud of op een eigen server in plaats van ze op dit apparaat te transcriberen. Als dit aan staat verlaat audio je apparaat en wordt het lokale model ontladen."
+      },
+      "provider": {
+        "title": "Provider",
+        "description": "Elk eindpunt dat de /audio/transcriptions-route van OpenAI implementeert werkt, waaronder OpenRouter, OpenAI, Groq en zelfgehoste servers zoals whisper.cpp of speaches."
+      },
+      "baseUrl": {
+        "title": "Basis-URL",
+        "description": "API-root van je eigen server, zonder het achtervoegsel /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "API-sleutel",
+        "description": "Wordt lokaal opgeslagen in de instellingen van Handy en alleen naar de door jou gekozen provider verzonden.",
+        "placeholder": "Vereist voor deze provider",
+        "placeholderOptional": "Optioneel voor zelfgehoste servers"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Ververs om de modellen van je provider op te halen, of typ direct een model-ID.",
+        "placeholder": "bijv. microsoft/mai-transcribe-2",
+        "refresh": "Beschikbare modellen verversen"
+      },
+      "prompt": {
+        "title": "Vocabulairehint",
+        "description": "Namen en vaktermen om de transcriptie naartoe te sturen. Je eigen woordenlijst wordt automatisch toegevoegd. Providers die dit veld negeren (OpenRouter) laten het stilzwijgend vallen.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Time-out (seconden)",
+        "description": "Hoe lang er op de provider wordt gewacht voordat een opname wordt opgegeven."
+      },
+      "fallback": {
+        "label": "Terugvallen op lokaal model",
+        "description": "Als de externe aanroep mislukt — offline, een time-out of een geweigerde sleutel — wordt er in plaats daarvan lokaal getranscribeerd. Het lokale model wordt nooit vooraf geladen zolang extern aan staat; het wordt op verzoek geladen zodra een externe aanroep voor het eerst mislukt. Zet dit uit om luid te falen en helemaal geen lokaal model te laden."
+      },
+      "test": {
+        "title": "Verbinding",
+        "description": "Stuurt een fractie van een seconde stilte door het echte transcriptieproces om de URL, de sleutel en het model te controleren.",
+        "action": "Verbinding testen",
+        "running": "Testen…"
       }
     }
   },

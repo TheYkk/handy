@@ -21,6 +21,7 @@ interface SettingsStore {
   outputDevices: AudioDevice[];
   customSounds: { start: boolean; stop: boolean };
   postProcessModelOptions: Record<string, string[]>;
+  remoteTranscriptionModelOptions: Record<string, string[]>;
   // null until loadUpdateChecksLocked() resolves
   updateChecksLocked: boolean | null;
 
@@ -59,6 +60,23 @@ interface SettingsStore {
   updatePostProcessModel: (providerId: string, model: string) => Promise<void>;
   fetchPostProcessModels: (providerId: string) => Promise<string[]>;
   setPostProcessModelOptions: (providerId: string, models: string[]) => void;
+
+  // Remote transcription helpers
+  setRemoteTranscriptionProvider: (providerId: string) => Promise<void>;
+  updateRemoteTranscriptionBaseUrl: (
+    providerId: string,
+    baseUrl: string,
+  ) => Promise<void>;
+  updateRemoteTranscriptionApiKey: (
+    providerId: string,
+    apiKey: string,
+  ) => Promise<void>;
+  updateRemoteTranscriptionModel: (
+    providerId: string,
+    model: string,
+  ) => Promise<void>;
+  fetchRemoteTranscriptionModels: (providerId: string) => Promise<string[]>;
+  testRemoteTranscription: (providerId: string) => Promise<string>;
 
   // Internal state setters
   setSettings: (settings: Settings | null) => void;
@@ -194,6 +212,42 @@ const settingUpdaters: {
     commands.changeTranscribeGpuDevice(value as string | null),
   extra_recording_buffer_ms: (value) =>
     commands.changeExtraRecordingBufferSetting(value as number),
+  remote_transcription_enabled: async (value) => {
+    const result = await commands.changeRemoteTranscriptionEnabledSetting(
+      value as boolean,
+    );
+    if (result.status === "error") {
+      toast.error(result.error);
+      throw new Error(result.error);
+    }
+  },
+  remote_transcription_prompt: async (value) => {
+    const result = await commands.changeRemoteTranscriptionPromptSetting(
+      value as string,
+    );
+    if (result.status === "error") {
+      toast.error(result.error);
+      throw new Error(result.error);
+    }
+  },
+  remote_transcription_timeout_seconds: async (value) => {
+    const result = await commands.changeRemoteTranscriptionTimeoutSetting(
+      value as number,
+    );
+    if (result.status === "error") {
+      toast.error(result.error);
+      throw new Error(result.error);
+    }
+  },
+  remote_transcription_fallback_to_local: async (value) => {
+    const result = await commands.changeRemoteTranscriptionFallbackSetting(
+      value as boolean,
+    );
+    if (result.status === "error") {
+      toast.error(result.error);
+      throw new Error(result.error);
+    }
+  },
 };
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -206,6 +260,7 @@ export const useSettingsStore = create<SettingsStore>()(
     outputDevices: [],
     customSounds: { start: false, stop: false },
     postProcessModelOptions: {},
+    remoteTranscriptionModelOptions: {},
     updateChecksLocked: null,
 
     // Internal setters
@@ -597,6 +652,133 @@ export const useSettingsStore = create<SettingsStore>()(
           [providerId]: models,
         },
       })),
+
+    setRemoteTranscriptionProvider: async (providerId) => {
+      const { setUpdating, refreshSettings } = get();
+      const updateKey = "remote_transcription_provider_id";
+      setUpdating(updateKey, true);
+      try {
+        const result =
+          await commands.setRemoteTranscriptionProvider(providerId);
+        if (result.status === "error") {
+          toast.error(result.error);
+          return;
+        }
+        await refreshSettings();
+      } finally {
+        setUpdating(updateKey, false);
+      }
+    },
+
+    updateRemoteTranscriptionBaseUrl: async (providerId, baseUrl) => {
+      const { setUpdating, refreshSettings } = get();
+      const updateKey = `remote_transcription_base_url:${providerId}`;
+      setUpdating(updateKey, true);
+      try {
+        const result = await commands.changeRemoteTranscriptionBaseUrlSetting(
+          providerId,
+          baseUrl,
+        );
+        if (result.status === "error") {
+          toast.error(result.error);
+          return;
+        }
+        // A new endpoint almost certainly serves different models, so the
+        // cached list is dropped rather than left to mislead the picker.
+        set((state) => ({
+          remoteTranscriptionModelOptions: {
+            ...state.remoteTranscriptionModelOptions,
+            [providerId]: [],
+          },
+        }));
+        await refreshSettings();
+      } finally {
+        setUpdating(updateKey, false);
+      }
+    },
+
+    updateRemoteTranscriptionApiKey: async (providerId, apiKey) => {
+      const { setUpdating, refreshSettings } = get();
+      const updateKey = `remote_transcription_api_key:${providerId}`;
+      setUpdating(updateKey, true);
+      try {
+        const result = await commands.changeRemoteTranscriptionApiKeySetting(
+          providerId,
+          apiKey,
+        );
+        if (result.status === "error") {
+          toast.error(result.error);
+          return;
+        }
+        // The key gates model listing, so invalidate whatever it produced.
+        set((state) => ({
+          remoteTranscriptionModelOptions: {
+            ...state.remoteTranscriptionModelOptions,
+            [providerId]: [],
+          },
+        }));
+        await refreshSettings();
+      } finally {
+        setUpdating(updateKey, false);
+      }
+    },
+
+    updateRemoteTranscriptionModel: async (providerId, model) => {
+      const { setUpdating, refreshSettings } = get();
+      const updateKey = `remote_transcription_model:${providerId}`;
+      setUpdating(updateKey, true);
+      try {
+        const result = await commands.changeRemoteTranscriptionModelSetting(
+          providerId,
+          model,
+        );
+        if (result.status === "error") {
+          toast.error(result.error);
+          return;
+        }
+        await refreshSettings();
+      } finally {
+        setUpdating(updateKey, false);
+      }
+    },
+
+    fetchRemoteTranscriptionModels: async (providerId) => {
+      const { setUpdating } = get();
+      const updateKey = `remote_transcription_models_fetch:${providerId}`;
+      setUpdating(updateKey, true);
+      try {
+        const result =
+          await commands.fetchRemoteTranscriptionModels(providerId);
+        if (result.status === "error") {
+          toast.error(result.error);
+          return [];
+        }
+        set((state) => ({
+          remoteTranscriptionModelOptions: {
+            ...state.remoteTranscriptionModelOptions,
+            [providerId]: result.data,
+          },
+        }));
+        return result.data;
+      } finally {
+        setUpdating(updateKey, false);
+      }
+    },
+
+    testRemoteTranscription: async (providerId) => {
+      const { setUpdating } = get();
+      const updateKey = `remote_transcription_test:${providerId}`;
+      setUpdating(updateKey, true);
+      try {
+        const result = await commands.testRemoteTranscription(providerId);
+        if (result.status === "error") {
+          throw new Error(result.error);
+        }
+        return result.data;
+      } finally {
+        setUpdating(updateKey, false);
+      }
+    },
 
     // Load default settings from Rust
     loadDefaultSettings: async () => {

@@ -11,6 +11,7 @@ interface UseSettingsReturn {
   outputDevices: AudioDevice[];
   audioFeedbackEnabled: boolean;
   postProcessModelOptions: Record<string, string[]>;
+  remoteTranscriptionModelOptions: Record<string, string[]>;
   updateChecksLocked: boolean | null;
 
   // Actions
@@ -42,6 +43,23 @@ interface UseSettingsReturn {
   ) => Promise<void>;
   updatePostProcessModel: (providerId: string, model: string) => Promise<void>;
   fetchPostProcessModels: (providerId: string) => Promise<string[]>;
+
+  // Remote transcription helpers
+  setRemoteTranscriptionProvider: (providerId: string) => Promise<void>;
+  updateRemoteTranscriptionBaseUrl: (
+    providerId: string,
+    baseUrl: string,
+  ) => Promise<void>;
+  updateRemoteTranscriptionApiKey: (
+    providerId: string,
+    apiKey: string,
+  ) => Promise<void>;
+  updateRemoteTranscriptionModel: (
+    providerId: string,
+    model: string,
+  ) => Promise<void>;
+  fetchRemoteTranscriptionModels: (providerId: string) => Promise<string[]>;
+  testRemoteTranscription: (providerId: string) => Promise<string>;
 }
 
 export const useSettings = (): UseSettingsReturn => {
@@ -62,6 +80,7 @@ export const useSettings = (): UseSettingsReturn => {
     outputDevices: store.outputDevices,
     audioFeedbackEnabled: store.settings?.audio_feedback || false,
     postProcessModelOptions: store.postProcessModelOptions,
+    remoteTranscriptionModelOptions: store.remoteTranscriptionModelOptions,
     updateChecksLocked: store.updateChecksLocked,
     updateSetting: store.updateSetting,
     resetSetting: store.resetSetting,
@@ -76,5 +95,11 @@ export const useSettings = (): UseSettingsReturn => {
     updatePostProcessApiKey: store.updatePostProcessApiKey,
     updatePostProcessModel: store.updatePostProcessModel,
     fetchPostProcessModels: store.fetchPostProcessModels,
+    setRemoteTranscriptionProvider: store.setRemoteTranscriptionProvider,
+    updateRemoteTranscriptionBaseUrl: store.updateRemoteTranscriptionBaseUrl,
+    updateRemoteTranscriptionApiKey: store.updateRemoteTranscriptionApiKey,
+    updateRemoteTranscriptionModel: store.updateRemoteTranscriptionModel,
+    fetchRemoteTranscriptionModels: store.fetchRemoteTranscriptionModels,
+    testRemoteTranscription: store.testRemoteTranscription,
   };
 };

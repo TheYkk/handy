@@ -7,7 +7,9 @@
     "model": "מודל",
     "quit": "יציאה",
     "cancel": "ביטול",
-    "secureInputWarning": "⚠ קיצורי המקשים חסומים על ידי Secure Input"
+    "secureInputWarning": "⚠ קיצורי המקשים חסומים על ידי Secure Input",
+    "modeRemote": "מרוחק: {{provider}}",
+    "modeLocal": "מקומי: {{model}}"
   },
   "sidebar": {
     "general": "כללי",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "הצג מה חדש",
         "description": "הצג הערות גרסה לאחר עדכוני Handy"
+      }
+    },
+    "remoteTranscription": {
+      "title": "תמלול מרוחק",
+      "enable": {
+        "label": "השתמש במודל מרוחק",
+        "description": "שלח את ההקלטות ל-API של המרת דיבור לטקסט בענן או בהתקנה עצמית, במקום לתמלל במחשב הזה. כשהאפשרות פעילה האודיו יוצא מהמכשיר שלך, והמודל המקומי מפורק."
+      },
+      "provider": {
+        "title": "ספק",
+        "description": "כל endpoint שמממש את הנתיב /audio/transcriptions של OpenAI יעבוד, כולל OpenRouter, OpenAI, Groq ושרתים בהתקנה עצמית כמו whisper.cpp או speaches."
+      },
+      "baseUrl": {
+        "title": "כתובת URL בסיסית",
+        "description": "כתובת השורש של ה-API בשרת שלך, בלי הסיומת /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "מפתח API",
+        "description": "נשמר מקומית בהגדרות של Handy ונשלח רק לספק שבחרת.",
+        "placeholder": "נדרש עבור ספק זה",
+        "placeholderOptional": "אופציונלי בשרתים בהתקנה עצמית"
+      },
+      "model": {
+        "title": "מודל",
+        "description": "רענן כדי להציג את המודלים שהספק שלך מציע, או הקלד מזהה מודל ישירות.",
+        "placeholder": "למשל microsoft/mai-transcribe-2",
+        "refresh": "רענן את המודלים הזמינים"
+      },
+      "prompt": {
+        "title": "רמז אוצר מילים",
+        "description": "שמות ומונחים מקצועיים שיטו את התמלול לכיוונם. המילים המותאמות אישית שלך מצורפות אוטומטית. ספקים שמתעלמים מהשדה הזה (OpenRouter) משמיטים אותו בשקט.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "זמן קצוב (שניות)",
+        "description": "כמה זמן להמתין לספק לפני שמוותרים על תמלול ההקלטה."
+      },
+      "fallback": {
+        "label": "מעבר למודל מקומי בעת כשל",
+        "description": "כשקריאה מרוחקת נכשלת — אין חיבור, חריגת זמן או מפתח שנדחה — תמלל מקומית במקום. המודל המקומי אינו נטען מראש כל עוד המצב המרוחק פעיל; הוא נטען לפי דרישה בפעם הראשונה שקריאה מרוחקת נכשלת. כבה אפשרות זו כדי לקבל שגיאה ברורה ולא לטעון מודל מקומי בכלל."
+      },
+      "test": {
+        "title": "חיבור",
+        "description": "שולח שבריר שנייה של שקט דרך נתיב התמלול האמיתי כדי לוודא את ה-URL, המפתח והמודל.",
+        "action": "בדוק חיבור",
+        "running": "בודק…"
       }
     }
   },

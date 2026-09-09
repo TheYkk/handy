@@ -7,7 +7,9 @@
     "model": "模型",
     "quit": "結束",
     "cancel": "取消",
-    "secureInputWarning": "⚠ 快捷鍵被 Secure Input 阻擋"
+    "secureInputWarning": "⚠ 快捷鍵被 Secure Input 阻擋",
+    "modeRemote": "遠端：{{provider}}",
+    "modeLocal": "本機：{{model}}"
   },
   "sidebar": {
     "general": "一般",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "顯示新功能",
         "description": "Handy 更新後顯示版本資訊"
+      }
+    },
+    "remoteTranscription": {
+      "title": "遠端轉錄",
+      "enable": {
+        "label": "使用遠端模型",
+        "description": "將錄音傳送到雲端或自行架設的語音轉文字 API，而不是在這台電腦上轉錄。啟用後音訊會離開您的裝置，本機模型也會被卸載。"
+      },
+      "provider": {
+        "title": "供應商",
+        "description": "任何實作 OpenAI 的 /audio/transcriptions 路徑的端點都可使用，包括 OpenRouter、OpenAI、Groq 以及 whisper.cpp 或 speaches 等自行架設的伺服器。"
+      },
+      "baseUrl": {
+        "title": "基礎 URL",
+        "description": "您自己伺服器的 API 根路徑，不含 /audio/transcriptions 後綴。"
+      },
+      "apiKey": {
+        "title": "API 金鑰",
+        "description": "僅儲存在 Handy 的本機設定中，並且只會傳送給您所選擇的供應商。",
+        "placeholder": "此供應商必填",
+        "placeholderOptional": "自行架設的伺服器可留空"
+      },
+      "model": {
+        "title": "模型",
+        "description": "重新整理以列出供應商提供的模型，或直接輸入模型 ID。",
+        "placeholder": "例如 microsoft/mai-transcribe-2",
+        "refresh": "重新整理可用模型"
+      },
+      "prompt": {
+        "title": "詞彙提示",
+        "description": "用來引導轉錄結果的人名和專業術語。您的自訂詞彙會自動附加在後面。不支援此欄位的供應商（OpenRouter）會靜默忽略它。",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "逾時（秒）",
+        "description": "放棄這次錄音之前，等待供應商回應的時間長度。"
+      },
+      "fallback": {
+        "label": "回退至本機模型",
+        "description": "當遠端請求失敗時（離線、逾時或金鑰被拒），改為在本機轉錄。啟用遠端轉錄期間，本機模型不會預先載入；只有在遠端請求首次失敗時才會按需載入。關閉此項則會直接回報錯誤，且完全不載入本機模型。"
+      },
+      "test": {
+        "title": "連線",
+        "description": "透過真實的轉錄流程傳送不到一秒的靜音，以驗證 URL、金鑰和模型。",
+        "action": "測試連線",
+        "running": "測試中…"
       }
     }
   },

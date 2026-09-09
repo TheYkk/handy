@@ -16,6 +16,7 @@ mod memory;
 mod overlay;
 mod paste_tx;
 pub mod portable;
+mod remote_transcription;
 mod secure_input;
 mod settings;
 mod shortcut;
@@ -530,11 +531,16 @@ fn run_headless_transcription(app: &AppHandle, args: &CliArgs) -> i32 {
 
     let tm = app.state::<Arc<TranscriptionManager>>();
 
+    // With remote transcription on, the clip is transcribed over HTTP and no
+    // local engine is needed — so don't demand a local model just to start.
+    // A local fallback (if enabled) loads itself only when a remote call fails.
+    let remote_enabled = get_settings(app).remote_transcription_enabled;
+
     let model_id = args
         .model
         .clone()
         .unwrap_or_else(|| get_settings(app).selected_model);
-    if model_id.is_empty() {
+    if model_id.is_empty() && !remote_enabled {
         eprintln!("error: no model selected (pass --model or pick one in the app)");
         return 2;
     }
@@ -548,11 +554,13 @@ fn run_headless_transcription(app: &AppHandle, args: &CliArgs) -> i32 {
         None => "settings".to_string(),
     };
 
-    // Cold load (timed).
+    // Cold load (timed). Skipped entirely in remote mode.
     let load_start = Instant::now();
-    if let Err(e) = tm.load_model_with_device(&model_id, device_index) {
-        eprintln!("error: load_model('{}') failed: {}", model_id, e);
-        return 1;
+    if !remote_enabled {
+        if let Err(e) = tm.load_model_with_device(&model_id, device_index) {
+            eprintln!("error: load_model('{}') failed: {}", model_id, e);
+            return 1;
+        }
     }
     let load_ms = load_start.elapsed().as_millis() as u64;
     let bound_backend = tm.current_backend();
@@ -563,8 +571,9 @@ fn run_headless_transcription(app: &AppHandle, args: &CliArgs) -> i32 {
     for i in 0..runs {
         // If the model's unload-timeout is "Immediately", transcribe() unloads
         // the engine after each run; reload (untimed) so repeats keep working
-        // and the inference timing below stays clean.
-        if !tm.is_model_loaded() {
+        // and the inference timing below stays clean. Skipped in remote mode,
+        // where no local engine is involved at all.
+        if !remote_enabled && !tm.is_model_loaded() {
             if let Err(e) = tm.load_model_with_device(&model_id, device_index) {
                 eprintln!("error: reload before run {} failed: {}", i + 1, e);
                 return 1;
@@ -685,6 +694,16 @@ pub fn run(cli_args: CliArgs) {
             shortcut::update_post_process_prompt,
             shortcut::delete_post_process_prompt,
             shortcut::set_post_process_selected_prompt,
+            shortcut::change_remote_transcription_enabled_setting,
+            shortcut::set_remote_transcription_provider,
+            shortcut::change_remote_transcription_base_url_setting,
+            shortcut::change_remote_transcription_api_key_setting,
+            shortcut::change_remote_transcription_model_setting,
+            shortcut::change_remote_transcription_prompt_setting,
+            shortcut::change_remote_transcription_timeout_setting,
+            shortcut::change_remote_transcription_fallback_setting,
+            shortcut::fetch_remote_transcription_models,
+            shortcut::test_remote_transcription,
             shortcut::update_custom_words,
             shortcut::suspend_all_bindings,
             shortcut::resume_all_bindings,

@@ -107,6 +107,43 @@ pub struct PostProcessProvider {
     pub supports_structured_output: bool,
 }
 
+/// A remote speech-to-text endpoint that speaks the OpenAI
+/// `/audio/transcriptions` dialect (OpenRouter, OpenAI, Groq, and the many
+/// self-hosted servers that copy it: whisper.cpp's `server`, speaches,
+/// faster-whisper-server, vLLM, …).
+///
+/// `base_url` is the API root *without* the `/audio/transcriptions` suffix, so
+/// the same value can also be used to list models via `/models`.
+#[derive(Serialize, Deserialize, Debug, Clone, Type)]
+pub struct RemoteTranscriptionProvider {
+    pub id: String,
+    pub label: String,
+    pub base_url: String,
+    /// Only `custom` endpoints may have their base URL edited; the hosted
+    /// providers are pinned so a typo can't silently redirect audio elsewhere.
+    #[serde(default)]
+    pub allow_base_url_edit: bool,
+    /// Hosted providers reject unauthenticated requests, so the UI blocks the
+    /// call early instead of surfacing a 401. Self-hosted servers usually don't
+    /// need a key.
+    #[serde(default)]
+    pub requires_api_key: bool,
+    /// Suggested model id, used as the initial value for a provider the user
+    /// has never configured.
+    #[serde(default)]
+    pub default_model: String,
+    /// Extra query string appended when listing models, e.g. OpenRouter's
+    /// `output_modalities=transcription` filter that narrows `/models` down to
+    /// speech-to-text models.
+    #[serde(default)]
+    pub models_query: Option<String>,
+    /// Whether the provider implements OpenAI's separate `/audio/translations`
+    /// route. When it does, "translate to English" can be honored remotely;
+    /// otherwise the setting is ignored for this provider.
+    #[serde(default)]
+    pub supports_translations: bool,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[serde(rename_all = "lowercase")]
 pub enum OverlayPosition {
@@ -514,6 +551,32 @@ pub struct AppSettings {
     /// `overlay_position` (position `none` → style `None`).
     #[serde(default = "default_overlay_style")]
     pub overlay_style: OverlayStyle,
+
+    // --- Remote (cloud / self-hosted) transcription ------------------------
+    /// When set, recordings are sent to `remote_transcription_provider_id`
+    /// instead of being transcribed by the bundled local engine.
+    #[serde(default)]
+    pub remote_transcription_enabled: bool,
+    #[serde(default = "default_remote_transcription_provider_id")]
+    pub remote_transcription_provider_id: String,
+    #[serde(default = "default_remote_transcription_providers")]
+    pub remote_transcription_providers: Vec<RemoteTranscriptionProvider>,
+    #[serde(default = "default_remote_transcription_api_keys")]
+    pub remote_transcription_api_keys: SecretMap,
+    /// Per-provider model id (provider id -> model id).
+    #[serde(default)]
+    pub remote_transcription_models: HashMap<String, String>,
+    /// Optional vocabulary/context hint forwarded as the OpenAI `prompt` field.
+    /// Providers that ignore `prompt` (OpenRouter) simply drop it.
+    #[serde(default)]
+    pub remote_transcription_prompt: String,
+    #[serde(default = "default_remote_transcription_timeout_seconds")]
+    pub remote_transcription_timeout_seconds: u64,
+    /// Fall back to the local engine when the remote call fails (offline,
+    /// timeout, bad key). With this off, a failed remote call is a hard error
+    /// and no local model is ever loaded.
+    #[serde(default = "default_remote_transcription_fallback_to_local")]
+    pub remote_transcription_fallback_to_local: bool,
 }
 
 fn default_model() -> String {
@@ -645,6 +708,82 @@ fn default_show_tray_icon() -> bool {
 
 fn default_post_process_provider_id() -> String {
     "openai".to_string()
+}
+
+pub const REMOTE_TRANSCRIPTION_CUSTOM_PROVIDER_ID: &str = "custom";
+
+fn default_remote_transcription_provider_id() -> String {
+    "openrouter".to_string()
+}
+
+fn default_remote_transcription_timeout_seconds() -> u64 {
+    30
+}
+
+fn default_remote_transcription_fallback_to_local() -> bool {
+    true
+}
+
+fn default_remote_transcription_api_keys() -> SecretMap {
+    SecretMap(HashMap::new())
+}
+
+fn default_remote_transcription_providers() -> Vec<RemoteTranscriptionProvider> {
+    vec![
+        RemoteTranscriptionProvider {
+            id: "openrouter".to_string(),
+            label: "OpenRouter".to_string(),
+            base_url: "https://openrouter.ai/api/v1".to_string(),
+            allow_base_url_edit: false,
+            requires_api_key: true,
+            default_model: "microsoft/mai-transcribe-2".to_string(),
+            // Narrows /models down to speech-to-text models.
+            models_query: Some("output_modalities=transcription".to_string()),
+            // OpenRouter exposes transcription only; there is no /audio/translations.
+            supports_translations: false,
+        },
+        RemoteTranscriptionProvider {
+            id: "openai".to_string(),
+            label: "OpenAI".to_string(),
+            base_url: "https://api.openai.com/v1".to_string(),
+            allow_base_url_edit: false,
+            requires_api_key: true,
+            default_model: "gpt-4o-mini-transcribe".to_string(),
+            models_query: None,
+            supports_translations: true,
+        },
+        RemoteTranscriptionProvider {
+            id: "groq".to_string(),
+            label: "Groq".to_string(),
+            base_url: "https://api.groq.com/openai/v1".to_string(),
+            allow_base_url_edit: false,
+            requires_api_key: true,
+            default_model: "whisper-large-v3-turbo".to_string(),
+            models_query: None,
+            supports_translations: true,
+        },
+        RemoteTranscriptionProvider {
+            id: "deepinfra".to_string(),
+            label: "DeepInfra".to_string(),
+            base_url: "https://api.deepinfra.com/v1/openai".to_string(),
+            allow_base_url_edit: false,
+            requires_api_key: true,
+            default_model: "openai/whisper-large-v3-turbo".to_string(),
+            models_query: None,
+            supports_translations: false,
+        },
+        RemoteTranscriptionProvider {
+            id: REMOTE_TRANSCRIPTION_CUSTOM_PROVIDER_ID.to_string(),
+            label: "Custom (self-hosted)".to_string(),
+            // Typical whisper.cpp `server` / speaches / vLLM local endpoint.
+            base_url: "http://localhost:8000/v1".to_string(),
+            allow_base_url_edit: true,
+            requires_api_key: false,
+            default_model: "whisper-1".to_string(),
+            models_query: None,
+            supports_translations: true,
+        },
+    ]
 }
 
 fn default_post_process_providers() -> Vec<PostProcessProvider> {
@@ -970,6 +1109,14 @@ pub fn get_default_settings() -> AppSettings {
         vad_enabled: default_vad_enabled(),
         vad_backend: VadBackend::default(),
         overlay_style: default_overlay_style(),
+        remote_transcription_enabled: false,
+        remote_transcription_provider_id: default_remote_transcription_provider_id(),
+        remote_transcription_providers: default_remote_transcription_providers(),
+        remote_transcription_api_keys: SecretMap(HashMap::new()),
+        remote_transcription_models: HashMap::new(),
+        remote_transcription_prompt: String::new(),
+        remote_transcription_timeout_seconds: default_remote_transcription_timeout_seconds(),
+        remote_transcription_fallback_to_local: default_remote_transcription_fallback_to_local(),
     }
 }
 
@@ -999,6 +1146,49 @@ impl AppSettings {
         self.post_process_providers
             .iter_mut()
             .find(|provider| provider.id == provider_id)
+    }
+
+    pub fn remote_transcription_provider(
+        &self,
+        provider_id: &str,
+    ) -> Option<&RemoteTranscriptionProvider> {
+        self.remote_transcription_providers
+            .iter()
+            .find(|provider| provider.id == provider_id)
+    }
+
+    pub fn remote_transcription_provider_mut(
+        &mut self,
+        provider_id: &str,
+    ) -> Option<&mut RemoteTranscriptionProvider> {
+        self.remote_transcription_providers
+            .iter_mut()
+            .find(|provider| provider.id == provider_id)
+    }
+
+    /// The model to use for a provider: the user's explicit choice, falling back
+    /// to the provider's suggested default so a freshly-picked provider is
+    /// immediately usable.
+    pub fn remote_transcription_model(&self, provider_id: &str) -> String {
+        let explicit = self
+            .remote_transcription_models
+            .get(provider_id)
+            .map(|m| m.trim())
+            .filter(|m| !m.is_empty())
+            .map(|m| m.to_string());
+
+        explicit.unwrap_or_else(|| {
+            self.remote_transcription_provider(provider_id)
+                .map(|p| p.default_model.clone())
+                .unwrap_or_default()
+        })
+    }
+
+    pub fn remote_transcription_api_key(&self, provider_id: &str) -> String {
+        self.remote_transcription_api_keys
+            .get(provider_id)
+            .cloned()
+            .unwrap_or_default()
     }
 }
 

@@ -304,6 +304,101 @@ async setPostProcessSelectedPrompt(id: string) : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Turn remote transcription on or off.
+ * 
+ * Switching it on also evicts the local model from memory: nothing will use it
+ * while remote handles every recording, and ASR models are large. A local
+ * fallback (if enabled) reloads it on demand the first time a remote call
+ * fails.
+ */
+async changeRemoteTranscriptionEnabledSetting(enabled: boolean) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_remote_transcription_enabled_setting", { enabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setRemoteTranscriptionProvider(providerId: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_remote_transcription_provider", { providerId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeRemoteTranscriptionBaseUrlSetting(providerId: string, baseUrl: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_remote_transcription_base_url_setting", { providerId, baseUrl }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeRemoteTranscriptionApiKeySetting(providerId: string, apiKey: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_remote_transcription_api_key_setting", { providerId, apiKey }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeRemoteTranscriptionModelSetting(providerId: string, model: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_remote_transcription_model_setting", { providerId, model }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeRemoteTranscriptionPromptSetting(prompt: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_remote_transcription_prompt_setting", { prompt }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeRemoteTranscriptionTimeoutSetting(seconds: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_remote_transcription_timeout_setting", { seconds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeRemoteTranscriptionFallbackSetting(enabled: boolean) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_remote_transcription_fallback_setting", { enabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * List the transcription models a remote provider offers.
+ */
+async fetchRemoteTranscriptionModels(providerId: string) : Promise<Result<string[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("fetch_remote_transcription_models", { providerId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Verify a remote provider end to end by transcribing a fraction of a second
+ * of silence. Returns the (usually empty) transcript on success.
+ */
+async testRemoteTranscription(providerId: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_remote_transcription", { providerId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async updateCustomWords(words: string[]) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("update_custom_words", { words }) };
@@ -1004,7 +1099,27 @@ vad_backend?: VadBackend;
  * not gated on this — that follows model capability. Migrated from the old
  * `overlay_position` (position `none` → style `None`).
  */
-overlay_style?: OverlayStyle }
+overlay_style?: OverlayStyle; 
+/**
+ * When set, recordings are sent to `remote_transcription_provider_id`
+ * instead of being transcribed by the bundled local engine.
+ */
+remote_transcription_enabled?: boolean; remote_transcription_provider_id?: string; remote_transcription_providers?: RemoteTranscriptionProvider[]; remote_transcription_api_keys?: SecretMap; 
+/**
+ * Per-provider model id (provider id -> model id).
+ */
+remote_transcription_models?: Partial<{ [key in string]: string }>; 
+/**
+ * Optional vocabulary/context hint forwarded as the OpenAI `prompt` field.
+ * Providers that ignore `prompt` (OpenRouter) simply drop it.
+ */
+remote_transcription_prompt?: string; remote_transcription_timeout_seconds?: number; 
+/**
+ * Fall back to the local engine when the remote call fails (offline,
+ * timeout, bad key). With this off, a failed remote call is a hard error
+ * and no local model is ever loaded.
+ */
+remote_transcription_fallback_to_local?: boolean }
 export type AudioDevice = { index: string; name: string; is_default: boolean }
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter"
 export type AvailableAccelerators = { transcribe: string[]; ort: string[]; gpu_devices: GpuDeviceOption[] }
@@ -1078,6 +1193,44 @@ export type PasteMethod = "ctrl_v" | "direct" | "none" | "shift_insert" | "ctrl_
 export type PermissionAccess = "allowed" | "denied" | "unknown"
 export type PostProcessProvider = { id: string; label: string; base_url: string; allow_base_url_edit?: boolean; models_endpoint?: string | null; supports_structured_output?: boolean }
 export type RecordingRetentionPeriod = "never" | "preserve_limit" | "days_3" | "weeks_2" | "months_3"
+/**
+ * A remote speech-to-text endpoint that speaks the OpenAI
+ * `/audio/transcriptions` dialect (OpenRouter, OpenAI, Groq, and the many
+ * self-hosted servers that copy it: whisper.cpp's `server`, speaches,
+ * faster-whisper-server, vLLM, …).
+ * 
+ * `base_url` is the API root *without* the `/audio/transcriptions` suffix, so
+ * the same value can also be used to list models via `/models`.
+ */
+export type RemoteTranscriptionProvider = { id: string; label: string; base_url: string; 
+/**
+ * Only `custom` endpoints may have their base URL edited; the hosted
+ * providers are pinned so a typo can't silently redirect audio elsewhere.
+ */
+allow_base_url_edit?: boolean; 
+/**
+ * Hosted providers reject unauthenticated requests, so the UI blocks the
+ * call early instead of surfacing a 401. Self-hosted servers usually don't
+ * need a key.
+ */
+requires_api_key?: boolean; 
+/**
+ * Suggested model id, used as the initial value for a provider the user
+ * has never configured.
+ */
+default_model?: string; 
+/**
+ * Extra query string appended when listing models, e.g. OpenRouter's
+ * `output_modalities=transcription` filter that narrows `/models` down to
+ * speech-to-text models.
+ */
+models_query?: string | null; 
+/**
+ * Whether the provider implements OpenAI's separate `/audio/translations`
+ * route. When it does, "translate to English" can be honored remotely;
+ * otherwise the setting is ignored for this provider.
+ */
+supports_translations?: boolean }
 export type SecretMap = Partial<{ [key in string]: string }>
 export type SecureInputStatus = { 
 /**

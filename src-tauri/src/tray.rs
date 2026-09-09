@@ -24,7 +24,7 @@ use crate::managers::history::{HistoryEntry, HistoryManager};
 use crate::managers::model::ModelManager;
 use crate::managers::transcription::TranscriptionManager;
 use crate::settings;
-use crate::tray_i18n::get_tray_translations;
+use crate::tray_i18n::{get_tray_translations, TrayStrings};
 use log::{debug, error, info, trace, warn};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -63,6 +63,11 @@ struct MenuInputs {
     downloaded_models: Vec<(String, String)>,
     locale: String,
     update_checks_enabled: bool,
+    /// `Some((provider label, model))` when remote transcription is handling
+    /// recordings; `None` means the local engine is in charge. Drives the mode
+    /// line in the menu and the tooltip, so the active path is visible without
+    /// opening settings.
+    remote: Option<(String, String)>,
 }
 
 /// Complete description of what the tray should look like.
@@ -324,6 +329,19 @@ fn compute_desired(app: &AppHandle, icon_state: TrayIconState) -> TrayDesired {
         .collect();
     downloaded_models.sort_by(|a, b| a.1.cmp(&b.1));
 
+    // Resolved before the struct literal below, which moves fields out of
+    // `settings`.
+    let remote = if settings.remote_transcription_enabled {
+        let provider_id = settings.remote_transcription_provider_id.clone();
+        let label = settings
+            .remote_transcription_provider(&provider_id)
+            .map(|p| p.label.clone())
+            .unwrap_or_else(|| provider_id.clone());
+        Some((label, settings.remote_transcription_model(&provider_id)))
+    } else {
+        None
+    };
+
     TrayDesired {
         icon_path: get_icon_path(theme, icon_state, warning),
         menu: MenuInputs {
@@ -332,6 +350,7 @@ fn compute_desired(app: &AppHandle, icon_state: TrayIconState) -> TrayDesired {
             model_loaded,
             selected_model: settings.selected_model,
             downloaded_models,
+            remote,
             locale: settings.app_language,
             update_checks_enabled: settings.update_checks_enabled,
         },
@@ -510,6 +529,11 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
         None::<&str>,
     )?;
     let quit_i = MenuItem::with_id(app, "quit", &strings.quit, true, quit_accelerator)?;
+
+    // Which engine will handle the next recording. Disabled: it is a status
+    // line, not an action — the toggle lives in Settings > Models.
+    let mode_label = mode_label(inputs, &strings);
+    let mode_i = MenuItem::with_id(app, "transcription_mode", &mode_label, false, None::<&str>)?;
     let separator = || PredefinedMenuItem::separator(app);
 
     let menu = if inputs.busy {
@@ -518,6 +542,7 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
             app,
             &[
                 &version_i,
+                &mode_i,
                 &separator()?,
                 &cancel_i,
                 &separator()?,
@@ -558,6 +583,7 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
             app,
             &[
                 &version_i,
+                &mode_i,
                 &separator()?,
                 &copy_last_transcript_i,
                 &separator()?,
@@ -582,16 +608,55 @@ fn build_menu(app: &AppHandle, inputs: &MenuInputs) -> tauri::Result<(Menu<tauri
         menu.remove(&check_updates_i)?;
     }
 
-    // Both layouts start with [version, separator, ...]; slot the warning in
-    // right below the version line so it's the first actionable thing seen.
-    let mut tooltip = version_label;
+    // Both layouts start with [version, mode, separator, ...]; slot the warning
+    // in right below those so it's the first actionable thing seen.
+    let mut tooltip = format!("{} — {}", version_label, mode_label);
     if let Some(warning_item) = secure_input_warning {
-        menu.insert(&warning_item, 2)?;
-        menu.insert(&separator()?, 3)?;
+        menu.insert(&warning_item, 3)?;
+        menu.insert(&separator()?, 4)?;
         tooltip = format!("{} — {}", tooltip, warning_item.text().unwrap_or_default());
     }
 
     Ok((menu, tooltip))
+}
+
+/// The tray's "which engine is transcribing" status line.
+///
+/// Pure so it can be tested without an `AppHandle`. Locales that haven't
+/// translated the mode keys yet fall back to English rather than rendering a
+/// blank line (build.rs emits "" for missing keys).
+fn mode_label(inputs: &MenuInputs, strings: &TrayStrings) -> String {
+    let english = || get_tray_translations(Some("en".to_string()));
+
+    match &inputs.remote {
+        Some((provider, model)) => {
+            let template = if strings.mode_remote.is_empty() {
+                english().mode_remote
+            } else {
+                strings.mode_remote.clone()
+            };
+            let line = template.replace("{{provider}}", provider);
+            if model.trim().is_empty() {
+                line
+            } else {
+                format!("{} · {}", line, model)
+            }
+        }
+        None => {
+            let template = if strings.mode_local.is_empty() {
+                english().mode_local
+            } else {
+                strings.mode_local.clone()
+            };
+            let model_name = inputs
+                .downloaded_models
+                .iter()
+                .find(|(id, _)| *id == inputs.selected_model)
+                .map(|(_, name)| name.clone())
+                .unwrap_or_else(|| strings.model.clone());
+            template.replace("{{model}}", &model_name)
+        }
+    }
 }
 
 fn last_transcript_text(entry: &HistoryEntry) -> &str {
@@ -668,7 +733,10 @@ pub fn copy_last_transcript(app: &AppHandle) {
 
 #[cfg(test)]
 mod tests {
-    use super::{last_transcript_text, load_tray_icon, MenuInputs, TrayDesired, TrayIconState};
+    use super::{
+        get_tray_translations, last_transcript_text, load_tray_icon, mode_label, MenuInputs,
+        TrayDesired, TrayIconState,
+    };
     use crate::managers::history::HistoryEntry;
 
     fn build_entry(transcription: &str, post_processed: Option<&str>) -> HistoryEntry {
@@ -694,6 +762,7 @@ mod tests {
             downloaded_models: vec![("small".to_string(), "Small".to_string())],
             locale: "en".to_string(),
             update_checks_enabled: true,
+            remote: None,
         }
     }
 
@@ -735,6 +804,44 @@ mod tests {
         };
         assert_ne!(recording.icon_path, transcribing.icon_path);
         assert_eq!(recording.menu, transcribing.menu);
+    }
+
+    #[test]
+    fn mode_label_names_the_local_model_when_remote_is_off() {
+        let strings = get_tray_translations(Some("en".to_string()));
+        assert_eq!(mode_label(&inputs(false), &strings), "Local: Small");
+    }
+
+    #[test]
+    fn mode_label_names_provider_and_model_when_remote_is_on() {
+        let strings = get_tray_translations(Some("en".to_string()));
+        let mut with_remote = inputs(false);
+        with_remote.remote = Some((
+            "OpenRouter".to_string(),
+            "microsoft/mai-transcribe-2".to_string(),
+        ));
+        assert_eq!(
+            mode_label(&with_remote, &strings),
+            "Remote: OpenRouter · microsoft/mai-transcribe-2"
+        );
+    }
+
+    #[test]
+    fn mode_label_omits_an_unset_remote_model() {
+        let strings = get_tray_translations(Some("en".to_string()));
+        let mut with_remote = inputs(false);
+        with_remote.remote = Some(("OpenRouter".to_string(), "  ".to_string()));
+        assert_eq!(mode_label(&with_remote, &strings), "Remote: OpenRouter");
+    }
+
+    /// Switching to remote must change the tray snapshot, otherwise the menu is
+    /// not rebuilt and the status line goes stale.
+    #[test]
+    fn local_and_remote_menu_inputs_differ() {
+        let local = inputs(false);
+        let mut remote = inputs(false);
+        remote.remote = Some(("OpenRouter".to_string(), "model".to_string()));
+        assert_ne!(local, remote);
     }
 
     #[test]

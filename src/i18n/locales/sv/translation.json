@@ -7,7 +7,9 @@
     "model": "Modell",
     "quit": "Avsluta",
     "cancel": "Avbryt",
-    "secureInputWarning": "⚠ Kortkommandon blockeras av Secure Input"
+    "secureInputWarning": "⚠ Kortkommandon blockeras av Secure Input",
+    "modeRemote": "Fjärr: {{provider}}",
+    "modeLocal": "Lokal: {{model}}"
   },
   "sidebar": {
     "general": "Allmänt",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Visa nyheter",
         "description": "Visa versionsinformation efter Handy-uppdateringar"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Fjärrtranskription",
+      "enable": {
+        "label": "Använd en fjärrmodell",
+        "description": "Skicka inspelningar till ett tal-till-text-API i molnet eller på en egen server i stället för att transkribera på den här datorn. När detta är på lämnar ljudet din enhet och den lokala modellen avlastas."
+      },
+      "provider": {
+        "title": "Leverantör",
+        "description": "Alla slutpunkter som implementerar OpenAI:s /audio/transcriptions-rutt fungerar, inklusive OpenRouter, OpenAI, Groq och egna servrar som whisper.cpp eller speaches."
+      },
+      "baseUrl": {
+        "title": "Bas-URL",
+        "description": "API-roten för din egen server, utan suffixet /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "API-nyckel",
+        "description": "Lagras lokalt i Handys inställningar och skickas endast till den leverantör du valt.",
+        "placeholder": "Krävs för denna leverantör",
+        "placeholderOptional": "Valfritt för egna servrar"
+      },
+      "model": {
+        "title": "Modell",
+        "description": "Uppdatera för att lista de modeller din leverantör erbjuder, eller ange ett modell-id direkt.",
+        "placeholder": "t.ex. microsoft/mai-transcribe-2",
+        "refresh": "Uppdatera tillgängliga modeller"
+      },
+      "prompt": {
+        "title": "Ordlistetips",
+        "description": "Namn och fackuttryck som transkriptionen ska styras mot. Dina anpassade ord läggs till automatiskt. Leverantörer som ignorerar detta fält (OpenRouter) förkastar det utan meddelande.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Tidsgräns (sekunder)",
+        "description": "Hur länge det ska väntas på leverantören innan en inspelning överges."
+      },
+      "fallback": {
+        "label": "Fall tillbaka på lokal modell",
+        "description": "När fjärranropet misslyckas — offline, tidsgräns eller avvisad nyckel — transkriberas det lokalt i stället. Den lokala modellen förladdas aldrig medan fjärrläget är på; den laddas vid behov första gången ett fjärranrop misslyckas. Stäng av detta för att felet ska synas tydligt och ingen lokal modell laddas alls."
+      },
+      "test": {
+        "title": "Anslutning",
+        "description": "Skickar en bråkdel av en sekund tystnad genom den verkliga transkriptionsvägen för att verifiera URL, nyckel och modell.",
+        "action": "Testa anslutning",
+        "running": "Testar…"
       }
     }
   },

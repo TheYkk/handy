@@ -39,6 +39,17 @@ use transcribe_rs::{
 const STREAM_PERF_LOG_INTERVAL: Duration = Duration::from_secs(5);
 const STREAM_FINALIZE_REPLY_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// Result of consulting the remote transcription path before touching the local
+/// engine.
+enum RemoteAttempt {
+    /// Run the local engine: remote is disabled, or it failed and falling back
+    /// to local is allowed.
+    NotConfigured,
+    Succeeded(String),
+    /// Remote failed and fallback is disabled, so the whole transcription fails.
+    Failed(anyhow::Error),
+}
+
 fn panic_payload_message(payload: &(dyn std::any::Any + Send)) -> String {
     if let Some(message) = payload.downcast_ref::<&str>() {
         (*message).to_string()
@@ -732,6 +743,15 @@ impl TranscriptionManager {
 
     /// Kicks off the model loading in a background thread if it's not already loaded
     pub fn initiate_model_load(&self) {
+        // Remote transcription answers the whole recording over HTTP, so the
+        // local engine stays out of memory entirely. When falling back is
+        // enabled it is loaded on demand by the first failed remote call, which
+        // also means Handy can run with no local model installed at all.
+        if !self.should_preload_local_engine() {
+            debug!("Remote transcription active; skipping local model pre-load");
+            return;
+        }
+
         let mut is_loading = self.is_loading.lock().unwrap();
         if *is_loading {
             return;
@@ -1163,12 +1183,162 @@ impl TranscriptionManager {
         .emit(&self.app_handle);
     }
 
+    /// Whether the local engine should be pre-loaded when a recording starts.
+    ///
+    /// Remote transcription handles the whole clip over HTTP, so pre-loading a
+    /// multi-hundred-MB ASR model would waste memory and startup time on every
+    /// hotkey press. With remote on, the local engine is loaded only if a remote
+    /// attempt actually fails and falling back is allowed — see
+    /// [`ensure_local_engine_loaded`](Self::ensure_local_engine_loaded).
+    pub fn should_preload_local_engine(&self) -> bool {
+        !crate::remote_transcription::is_enabled(&get_settings(&self.app_handle))
+    }
+
+    /// Load the local engine right now if it isn't loaded, blocking until it is.
+    ///
+    /// This is the lazy half of the remote fallback: nothing is in memory while
+    /// remote calls succeed, and the model is paid for only on the first
+    /// failure. `transcribe` refuses to run with no engine held, so a fallback
+    /// has to force the load itself rather than rely on the background
+    /// pre-loader.
+    fn ensure_local_engine_loaded(&self) -> Result<()> {
+        // Wait out any in-flight background load before deciding.
+        let mut is_loading = self.is_loading.lock().unwrap_or_else(|e| e.into_inner());
+        while *is_loading {
+            is_loading = self
+                .loading_condvar
+                .wait(is_loading)
+                .unwrap_or_else(|e| e.into_inner());
+        }
+
+        let reload_pending = self.reload_model_on_next_use.load(Ordering::Acquire);
+        if !reload_pending && self.is_model_loaded() {
+            return Ok(());
+        }
+
+        // Claim the loading flag so concurrent callers wait instead of racing
+        // two loads of the same model.
+        *is_loading = true;
+        drop(is_loading);
+        if reload_pending {
+            self.reload_model_on_next_use
+                .store(false, Ordering::Release);
+        }
+
+        let model_id = get_settings(&self.app_handle).selected_model;
+        let result = if model_id.trim().is_empty() {
+            Err(anyhow::anyhow!(
+                "no local model is selected to fall back to"
+            ))
+        } else {
+            self.load_model(&model_id)
+        };
+
+        let mut is_loading = self.is_loading.lock().unwrap_or_else(|e| e.into_inner());
+        *is_loading = false;
+        self.loading_condvar.notify_all();
+        drop(is_loading);
+
+        result
+    }
+
+    /// Outcome of an attempted remote transcription.
+    ///
+    /// `NotConfigured` means the local engine should run: remote is either off,
+    /// or it failed and falling back is allowed.
+    fn try_remote_transcribe(&self, audio: &[f32]) -> RemoteAttempt {
+        let settings = get_settings(&self.app_handle);
+        if !crate::remote_transcription::is_enabled(&settings) {
+            return RemoteAttempt::NotConfigured;
+        }
+
+        let fallback = settings.remote_transcription_fallback_to_local;
+        let give_up = |message: String| -> RemoteAttempt {
+            if !fallback {
+                return RemoteAttempt::Failed(anyhow::anyhow!(message));
+            }
+            warn!("{}. Falling back to the local model.", message);
+            // The engine was deliberately not pre-loaded, so load it here.
+            // If that fails there is nothing left to try, and the remote error
+            // is the more useful half of the message.
+            match self.ensure_local_engine_loaded() {
+                Ok(()) => RemoteAttempt::NotConfigured,
+                Err(load_err) => RemoteAttempt::Failed(anyhow::anyhow!(
+                    "{}, and the local fallback could not be loaded: {}",
+                    message,
+                    load_err
+                )),
+            }
+        };
+
+        let config = match crate::remote_transcription::resolve_config(&settings) {
+            Ok(config) => config,
+            Err(err) => return give_up(format!("Remote transcription is misconfigured: {}", err)),
+        };
+
+        if audio.is_empty() {
+            debug!("Empty audio vector; skipping remote transcription");
+            return RemoteAttempt::Succeeded(String::new());
+        }
+
+        let started = Instant::now();
+        match crate::remote_transcription::transcribe_blocking(&config, audio) {
+            Ok(text) => {
+                let audio_secs = audio.len() as f64 / 16_000.0;
+                let elapsed_secs = started.elapsed().as_secs_f64();
+                info!(
+                    "Remote transcription via {} ({}) completed in {:.2}s for {:.2}s of audio ({:.2}x real-time)",
+                    config.provider_label,
+                    config.model,
+                    elapsed_secs,
+                    audio_secs,
+                    real_time_factor(audio_secs, elapsed_secs)
+                );
+
+                // The remote model never saw an initial prompt it is guaranteed
+                // to honor, so custom words still go through fuzzy correction —
+                // same treatment as the non-whisper local engines.
+                //
+                // Language evidence for filler-word removal: an explicit
+                // selection is authoritative, a remote translation is English by
+                // definition, and auto-detect leaves it to text-based detection.
+                // The supported-language list is empty because a remote provider
+                // publishes no per-model metadata to Handy, which means
+                // unconstrained detection rather than no detection.
+                let output_language = if config.translate {
+                    OutputLanguageEvidence::TranslatedToEnglish
+                } else {
+                    match &config.language {
+                        Some(language) => OutputLanguageEvidence::UserSelected(language.clone()),
+                        None => OutputLanguageEvidence::Unknown,
+                    }
+                };
+                let filtered =
+                    post_process_transcription_text(text, &settings, false, &output_language, &[]);
+                if filtered.is_empty() {
+                    info!("Remote transcription result is empty");
+                }
+                RemoteAttempt::Succeeded(filtered)
+            }
+            Err(err) => give_up(format!("Remote transcription failed: {}", err)),
+        }
+    }
+
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANDY_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
             return Err(anyhow::anyhow!(
                 "Simulated transcription failure (HANDY_FORCE_TRANSCRIPTION_FAILURE)"
             ));
+        }
+
+        // Remote transcription short-circuits the local engine entirely. On
+        // failure we either fall back to the local model or surface the error,
+        // depending on `remote_transcription_fallback_to_local`.
+        match self.try_remote_transcribe(&audio) {
+            RemoteAttempt::NotConfigured => {}
+            RemoteAttempt::Succeeded(text) => return Ok(text),
+            RemoteAttempt::Failed(err) => return Err(err),
         }
 
         // Update last activity timestamp

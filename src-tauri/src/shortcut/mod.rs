@@ -1249,6 +1249,214 @@ pub fn set_post_process_selected_prompt(app: AppHandle, id: String) -> Result<()
     Ok(())
 }
 
+/// Validate that a remote transcription provider exists.
+fn validate_remote_provider_exists(
+    settings: &settings::AppSettings,
+    provider_id: &str,
+) -> Result<(), String> {
+    if settings
+        .remote_transcription_provider(provider_id)
+        .is_none()
+    {
+        return Err(format!(
+            "Remote transcription provider '{}' not found",
+            provider_id
+        ));
+    }
+    Ok(())
+}
+
+/// Turn remote transcription on or off.
+///
+/// Switching it on also evicts the local model from memory: nothing will use it
+/// while remote handles every recording, and ASR models are large. A local
+/// fallback (if enabled) reloads it on demand the first time a remote call
+/// fails.
+#[tauri::command]
+#[specta::specta]
+pub fn change_remote_transcription_enabled_setting(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.remote_transcription_enabled = enabled;
+    settings::write_settings(&app, settings);
+
+    if enabled {
+        let tm =
+            app.state::<std::sync::Arc<crate::managers::transcription::TranscriptionManager>>();
+        if tm.is_model_loaded() {
+            if let Err(e) = tm.unload_model() {
+                warn!("Failed to unload local model after enabling remote: {}", e);
+            }
+        }
+    }
+    // The tray shows which engine is active, so it has to follow the toggle.
+    tray::update_tray_menu(&app);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn set_remote_transcription_provider(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    validate_remote_provider_exists(&settings, &provider_id)?;
+    settings.remote_transcription_provider_id = provider_id;
+    settings::write_settings(&app, settings);
+    tray::update_tray_menu(&app);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_remote_transcription_base_url_setting(
+    app: AppHandle,
+    provider_id: String,
+    base_url: String,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    validate_remote_provider_exists(&settings, &provider_id)?;
+
+    let provider = settings
+        .remote_transcription_provider_mut(&provider_id)
+        .expect("provider validated above");
+
+    if !provider.allow_base_url_edit {
+        return Err(format!(
+            "Provider '{}' does not allow editing the base URL",
+            provider.label
+        ));
+    }
+
+    provider.base_url = base_url.trim().to_string();
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_remote_transcription_api_key_setting(
+    app: AppHandle,
+    provider_id: String,
+    api_key: String,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    validate_remote_provider_exists(&settings, &provider_id)?;
+    settings
+        .remote_transcription_api_keys
+        .insert(provider_id, api_key);
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_remote_transcription_model_setting(
+    app: AppHandle,
+    provider_id: String,
+    model: String,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    validate_remote_provider_exists(&settings, &provider_id)?;
+    settings
+        .remote_transcription_models
+        .insert(provider_id, model.trim().to_string());
+    settings::write_settings(&app, settings);
+    tray::update_tray_menu(&app);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_remote_transcription_prompt_setting(
+    app: AppHandle,
+    prompt: String,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.remote_transcription_prompt = prompt;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_remote_transcription_timeout_setting(
+    app: AppHandle,
+    seconds: u64,
+) -> Result<(), String> {
+    if seconds == 0 {
+        return Err("Timeout must be at least 1 second".to_string());
+    }
+    let mut settings = settings::get_settings(&app);
+    settings.remote_transcription_timeout_seconds = seconds;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_remote_transcription_fallback_setting(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.remote_transcription_fallback_to_local = enabled;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+/// List the transcription models a remote provider offers.
+#[tauri::command]
+#[specta::specta]
+pub async fn fetch_remote_transcription_models(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<Vec<String>, String> {
+    let settings = settings::get_settings(&app);
+    let models_query = settings
+        .remote_transcription_provider(&provider_id)
+        .ok_or_else(|| format!("Provider '{}' not found", provider_id))?
+        .models_query
+        .clone();
+
+    let config = crate::remote_transcription::resolve_config_for_provider(&settings, &provider_id)
+        // A model isn't needed to list models, so an unset model must not block
+        // the very call that would let the user pick one.
+        .or_else(|err| {
+            if err.contains("No remote model selected") {
+                let mut relaxed = settings.clone();
+                relaxed
+                    .remote_transcription_models
+                    .insert(provider_id.clone(), "placeholder".to_string());
+                crate::remote_transcription::resolve_config_for_provider(&relaxed, &provider_id)
+            } else {
+                Err(err)
+            }
+        })?;
+
+    crate::remote_transcription::list_models(&config, models_query.as_deref())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Verify a remote provider end to end by transcribing a fraction of a second
+/// of silence. Returns the (usually empty) transcript on success.
+#[tauri::command]
+#[specta::specta]
+pub async fn test_remote_transcription(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<String, String> {
+    let settings = settings::get_settings(&app);
+    let config = crate::remote_transcription::resolve_config_for_provider(&settings, &provider_id)?;
+    crate::remote_transcription::test_connection(config)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn change_mute_while_recording_setting(app: AppHandle, enabled: bool) -> Result<(), String> {

@@ -7,7 +7,9 @@
     "model": "Modèle",
     "quit": "Quitter",
     "cancel": "Annuler",
-    "secureInputWarning": "⚠ Raccourcis bloqués par Secure Input"
+    "secureInputWarning": "⚠ Raccourcis bloqués par Secure Input",
+    "modeRemote": "À distance : {{provider}}",
+    "modeLocal": "Local : {{model}}"
   },
   "sidebar": {
     "general": "Général",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Afficher les nouveautés",
         "description": "Afficher les notes de version après les mises à jour de Handy"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Transcription à distance",
+      "enable": {
+        "label": "Utiliser un modèle distant",
+        "description": "Envoyer les enregistrements à une API de reconnaissance vocale dans le cloud ou auto-hébergée au lieu de les transcrire sur cette machine. L'audio quitte votre appareil lorsque cette option est activée, et le modèle local est déchargé."
+      },
+      "provider": {
+        "title": "Fournisseur",
+        "description": "Tout point de terminaison qui implémente la route /audio/transcriptions d'OpenAI fonctionne, y compris OpenRouter, OpenAI, Groq et les serveurs auto-hébergés comme whisper.cpp ou speaches."
+      },
+      "baseUrl": {
+        "title": "URL de base",
+        "description": "Racine de l'API de votre propre serveur, sans le suffixe /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "Clé API",
+        "description": "Stockée localement dans les paramètres de Handy et envoyée uniquement au fournisseur que vous avez sélectionné.",
+        "placeholder": "Requise pour ce fournisseur",
+        "placeholderOptional": "Facultative pour les serveurs auto-hébergés"
+      },
+      "model": {
+        "title": "Modèle",
+        "description": "Actualisez pour lister les modèles proposés par votre fournisseur, ou saisissez directement un identifiant de modèle.",
+        "placeholder": "par ex. microsoft/mai-transcribe-2",
+        "refresh": "Actualiser les modèles disponibles"
+      },
+      "prompt": {
+        "title": "Indice de vocabulaire",
+        "description": "Noms et termes spécialisés à privilégier dans la transcription. Vos mots personnalisés sont ajoutés automatiquement. Les fournisseurs qui ignorent ce champ (OpenRouter) l'abandonnent silencieusement.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Délai d'attente (secondes)",
+        "description": "Durée d'attente de la réponse du fournisseur avant d'abandonner un enregistrement."
+      },
+      "fallback": {
+        "label": "Basculer vers le modèle local",
+        "description": "Lorsque l'appel distant échoue — hors ligne, délai dépassé ou clé refusée — transcrire localement à la place. Le modèle local n'est jamais préchargé tant que le mode distant est actif ; il est chargé à la demande lors du premier échec d'un appel distant. Désactivez cette option pour signaler clairement l'erreur et ne jamais charger de modèle local."
+      },
+      "test": {
+        "title": "Connexion",
+        "description": "Envoie une fraction de seconde de silence par le véritable chemin de transcription afin de vérifier l'URL, la clé et le modèle.",
+        "action": "Tester la connexion",
+        "running": "Test en cours…"
       }
     }
   },

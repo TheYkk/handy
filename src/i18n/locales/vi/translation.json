@@ -7,7 +7,9 @@
     "model": "Mô hình",
     "quit": "Thoát",
     "cancel": "Hủy",
-    "secureInputWarning": "⚠ Phím tắt bị Secure Input chặn"
+    "secureInputWarning": "⚠ Phím tắt bị Secure Input chặn",
+    "modeRemote": "Từ xa: {{provider}}",
+    "modeLocal": "Cục bộ: {{model}}"
   },
   "sidebar": {
     "general": "Chung",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Hiển thị điểm mới",
         "description": "Hiển thị ghi chú phát hành sau khi Handy cập nhật"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Phiên âm từ xa",
+      "enable": {
+        "label": "Dùng mô hình từ xa",
+        "description": "Gửi bản ghi âm đến API chuyển giọng nói thành văn bản trên đám mây hoặc do bạn tự vận hành, thay vì phiên âm trên máy này. Khi bật, âm thanh sẽ rời khỏi thiết bị của bạn và mô hình cục bộ được giải phóng."
+      },
+      "provider": {
+        "title": "Nhà cung cấp",
+        "description": "Mọi điểm cuối có triển khai tuyến /audio/transcriptions của OpenAI đều hoạt động, bao gồm OpenRouter, OpenAI, Groq và các máy chủ tự vận hành như whisper.cpp hoặc speaches."
+      },
+      "baseUrl": {
+        "title": "URL cơ sở",
+        "description": "Gốc API của máy chủ của bạn, không kèm hậu tố /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "Khóa API",
+        "description": "Được lưu cục bộ trong cài đặt của Handy và chỉ gửi đến nhà cung cấp bạn đã chọn.",
+        "placeholder": "Bắt buộc với nhà cung cấp này",
+        "placeholderOptional": "Không bắt buộc với máy chủ tự vận hành"
+      },
+      "model": {
+        "title": "Mô hình",
+        "description": "Làm mới để xem danh sách mô hình mà nhà cung cấp của bạn hỗ trợ, hoặc nhập trực tiếp ID mô hình.",
+        "placeholder": "vd. microsoft/mai-transcribe-2",
+        "refresh": "Làm mới mô hình khả dụng"
+      },
+      "prompt": {
+        "title": "Gợi ý từ vựng",
+        "description": "Tên riêng và thuật ngữ dùng để định hướng bản phiên âm. Các từ tùy chỉnh của bạn được tự động thêm vào. Những nhà cung cấp bỏ qua trường này (OpenRouter) sẽ âm thầm loại bỏ nó.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Thời gian chờ (giây)",
+        "description": "Thời gian chờ phản hồi từ nhà cung cấp trước khi bỏ qua một bản ghi âm."
+      },
+      "fallback": {
+        "label": "Dự phòng bằng mô hình cục bộ",
+        "description": "Khi lệnh gọi từ xa thất bại — mất kết nối, hết thời gian chờ, hoặc khóa bị từ chối — sẽ phiên âm cục bộ thay thế. Mô hình cục bộ không bao giờ được tải trước trong lúc chế độ từ xa đang bật; nó chỉ được tải khi lệnh gọi từ xa thất bại lần đầu. Tắt tùy chọn này để báo lỗi rõ ràng và không bao giờ tải mô hình cục bộ."
+      },
+      "test": {
+        "title": "Kết nối",
+        "description": "Gửi một khoảng im lặng chưa đầy một giây qua đúng luồng phiên âm thực tế để xác minh URL, khóa và mô hình.",
+        "action": "Kiểm tra kết nối",
+        "running": "Đang kiểm tra…"
       }
     }
   },

@@ -18,6 +18,7 @@ import {
   supportsLanguageCode,
 } from "@/lib/constants/languages.ts";
 import type { ModelInfo } from "@/bindings";
+import { RemoteTranscriptionSettings } from "../remote-transcription/RemoteTranscriptionSettings";
 
 // check if model supports a language based on its supported_languages list
 const modelSupportsLanguage = (model: ModelInfo, langCode: string): boolean => {
@@ -245,6 +246,10 @@ export const ModelsSettings: React.FC = () => {
           {t("settings.models.description")}
         </p>
       </div>
+
+      {/* Remote providers first: with one enabled, the local catalog below is
+          only a fallback (or unused entirely). */}
+      <RemoteTranscriptionSettings />
 
       {/* Search bar — filter the catalog by name or description */}
       <div className="relative">

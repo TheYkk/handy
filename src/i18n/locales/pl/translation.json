@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Zamknij",
     "cancel": "Anuluj",
-    "secureInputWarning": "⚠ Skróty zablokowane przez Secure Input"
+    "secureInputWarning": "⚠ Skróty zablokowane przez Secure Input",
+    "modeRemote": "Zdalnie: {{provider}}",
+    "modeLocal": "Lokalnie: {{model}}"
   },
   "sidebar": {
     "general": "Ogólne",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Pokaż nowości",
         "description": "Pokazuj informacje o wydaniu po aktualizacjach Handy"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Transkrypcja zdalna",
+      "enable": {
+        "label": "Używaj modelu zdalnego",
+        "description": "Wysyłaj nagrania do chmurowego lub własnego API mowy na tekst zamiast transkrybować je na tym komputerze. Gdy ta opcja jest włączona, dźwięk opuszcza Twoje urządzenie, a model lokalny zostaje zwolniony."
+      },
+      "provider": {
+        "title": "Dostawca",
+        "description": "Działa każdy endpoint implementujący trasę /audio/transcriptions z OpenAI, w tym OpenRouter, OpenAI, Groq oraz serwery własne, takie jak whisper.cpp czy speaches."
+      },
+      "baseUrl": {
+        "title": "Bazowy adres URL",
+        "description": "Główny adres API Twojego serwera, bez końcówki /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "Klucz API",
+        "description": "Przechowywany lokalnie w ustawieniach Handy i wysyłany tylko do wybranego dostawcy.",
+        "placeholder": "Wymagany dla tego dostawcy",
+        "placeholderOptional": "Opcjonalny dla serwerów własnych"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Odśwież, aby wyświetlić modele oferowane przez Twojego dostawcę, lub wpisz identyfikator modelu ręcznie.",
+        "placeholder": "np. microsoft/mai-transcribe-2",
+        "refresh": "Odśwież dostępne modele"
+      },
+      "prompt": {
+        "title": "Podpowiedź słownikowa",
+        "description": "Nazwy i żargon, w stronę których ma być kierowana transkrypcja. Twoje własne słowa są dodawane automatycznie. Dostawcy, którzy ignorują to pole (OpenRouter), pomijają je bez ostrzeżenia.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Limit czasu (sekundy)",
+        "description": "Jak długo czekać na odpowiedź dostawcy przed porzuceniem nagrania."
+      },
+      "fallback": {
+        "label": "Wracaj do modelu lokalnego",
+        "description": "Gdy zdalne wywołanie się nie uda — brak połączenia, przekroczony limit czasu lub odrzucony klucz — transkrypcja zostanie wykonana lokalnie. Model lokalny nigdy nie jest wczytywany z góry, gdy tryb zdalny jest włączony; wczytuje się na żądanie przy pierwszym nieudanym wywołaniu. Wyłącz tę opcję, aby zgłaszać błąd i nie wczytywać modelu lokalnego wcale."
+      },
+      "test": {
+        "title": "Połączenie",
+        "description": "Przesyła ułamek sekundy ciszy przez rzeczywistą ścieżkę transkrypcji, aby sprawdzić adres URL, klucz i model.",
+        "action": "Testuj połączenie",
+        "running": "Testowanie…"
       }
     }
   },

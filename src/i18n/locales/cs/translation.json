@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Ukončit",
     "cancel": "Zrušit",
-    "secureInputWarning": "⚠ Zkratky blokuje Secure Input"
+    "secureInputWarning": "⚠ Zkratky blokuje Secure Input",
+    "modeRemote": "Vzdáleně: {{provider}}",
+    "modeLocal": "Lokálně: {{model}}"
   },
   "sidebar": {
     "general": "Obecné",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Zobrazovat novinky",
         "description": "Zobrazovat poznámky k vydání po aktualizacích Handy"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Vzdálený přepis",
+      "enable": {
+        "label": "Použít vzdálený model",
+        "description": "Odesílá nahrávky do cloudového nebo vlastního hostovaného API pro převod řeči na text místo přepisu na tomto zařízení. Když je zapnuto, zvuk opouští vaše zařízení a lokální model se uvolní."
+      },
+      "provider": {
+        "title": "Poskytovatel",
+        "description": "Funguje jakýkoli endpoint, který implementuje cestu /audio/transcriptions od OpenAI, včetně OpenRouter, OpenAI, Groq a vlastních serverů jako whisper.cpp nebo speaches."
+      },
+      "baseUrl": {
+        "title": "Základní URL",
+        "description": "Kořen API vašeho vlastního serveru, bez přípony /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "API klíč",
+        "description": "Ukládá se lokálně v nastavení Handy a odesílá se pouze vybranému poskytovateli.",
+        "placeholder": "Vyžadován tímto poskytovatelem",
+        "placeholderOptional": "U vlastních serverů nepovinný"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Obnovte seznam modelů, které váš poskytovatel nabízí, nebo zadejte identifikátor modelu přímo.",
+        "placeholder": "např. microsoft/mai-transcribe-2",
+        "refresh": "Obnovit dostupné modely"
+      },
+      "prompt": {
+        "title": "Nápověda ke slovníku",
+        "description": "Jména a odborné termíny, kterým má přepis dávat přednost. Vaše vlastní slova se přidají automaticky. Poskytovatelé, kteří toto pole ignorují (OpenRouter), jej bez upozornění zahodí.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Časový limit (sekundy)",
+        "description": "Jak dlouho čekat na odpověď poskytovatele, než bude přepis nahrávky vzdán."
+      },
+      "fallback": {
+        "label": "Přejít na lokální model",
+        "description": "Když vzdálené volání selže – offline, časový limit nebo odmítnutý klíč –, přepis se provede lokálně. Lokální model se při zapnutém vzdáleném režimu nikdy nenačítá předem; načte se až při prvním selhání vzdáleného volání. Vypnutím této volby se chyba projeví viditelně a lokální model se nenačte vůbec."
+      },
+      "test": {
+        "title": "Připojení",
+        "description": "Odešle zlomek sekundy ticha skutečnou cestou přepisu a ověří tak URL, klíč a model.",
+        "action": "Otestovat připojení",
+        "running": "Testuji…"
       }
     }
   },

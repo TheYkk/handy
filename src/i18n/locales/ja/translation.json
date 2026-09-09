@@ -7,7 +7,9 @@
     "model": "モデル",
     "quit": "終了",
     "cancel": "キャンセル",
-    "secureInputWarning": "⚠ Secure Input でショートカットがブロック中"
+    "secureInputWarning": "⚠ Secure Input でショートカットがブロック中",
+    "modeRemote": "リモート: {{provider}}",
+    "modeLocal": "ローカル: {{model}}"
   },
   "sidebar": {
     "general": "一般",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "新機能を表示",
         "description": "Handy のアップデート後にリリースノートを表示"
+      }
+    },
+    "remoteTranscription": {
+      "title": "リモート文字起こし",
+      "enable": {
+        "label": "リモートモデルを使用",
+        "description": "この端末で文字起こしする代わりに、クラウドまたは自己ホストの音声認識 API へ録音を送信します。有効にすると音声が端末の外へ送信され、ローカルモデルはアンロードされます。"
+      },
+      "provider": {
+        "title": "プロバイダー",
+        "description": "OpenAI の /audio/transcriptions ルートを実装したエンドポイントであれば利用できます。OpenRouter、OpenAI、Groq のほか、whisper.cpp や speaches などの自己ホストサーバーにも対応します。"
+      },
+      "baseUrl": {
+        "title": "ベース URL",
+        "description": "自分のサーバーの API ルート。/audio/transcriptions は含めません。"
+      },
+      "apiKey": {
+        "title": "API キー",
+        "description": "Handy の設定にローカル保存され、選択したプロバイダーにのみ送信されます。",
+        "placeholder": "このプロバイダーでは必須",
+        "placeholderOptional": "自己ホストサーバーでは任意"
+      },
+      "model": {
+        "title": "モデル",
+        "description": "更新するとプロバイダーが提供するモデルが一覧表示されます。モデル ID を直接入力することもできます。",
+        "placeholder": "例: microsoft/mai-transcribe-2",
+        "refresh": "利用可能なモデルを更新"
+      },
+      "prompt": {
+        "title": "語彙のヒント",
+        "description": "文字起こしで優先させたい名前や専門用語。カスタム単語は自動的に追加されます。このフィールドを無視するプロバイダー (OpenRouter) では黙って破棄されます。",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "タイムアウト (秒)",
+        "description": "録音の処理を諦めるまでにプロバイダーの応答を待つ時間。"
+      },
+      "fallback": {
+        "label": "ローカルモデルにフォールバック",
+        "description": "リモート呼び出しが失敗した場合 (オフライン、タイムアウト、キーの拒否) は、代わりにローカルで文字起こしします。リモートが有効な間ローカルモデルは事前に読み込まれず、最初にリモート呼び出しが失敗したときに必要に応じて読み込まれます。オフにすると、エラーをそのまま通知し、ローカルモデルは一切読み込みません。"
+      },
+      "test": {
+        "title": "接続",
+        "description": "実際の文字起こし経路に 1 秒未満の無音を送信し、URL、キー、モデルを検証します。",
+        "action": "接続をテスト",
+        "running": "テスト中…"
       }
     }
   },

@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Çıkış",
     "cancel": "İptal",
-    "secureInputWarning": "⚠ Kısayollar Secure Input tarafından engelleniyor"
+    "secureInputWarning": "⚠ Kısayollar Secure Input tarafından engelleniyor",
+    "modeRemote": "Uzak: {{provider}}",
+    "modeLocal": "Yerel: {{model}}"
   },
   "sidebar": {
     "general": "Genel",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Yenilikleri Göster",
         "description": "Handy güncellemelerinden sonra sürüm notlarını göster"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Uzak Transkripsiyon",
+      "enable": {
+        "label": "Uzak Model Kullan",
+        "description": "Kayıtları bu bilgisayarda transkribe etmek yerine bulut tabanlı veya kendi barındırdığınız bir konuşmadan metne API'sine gönderir. Bu seçenek açıkken ses cihazınızdan çıkar ve yerel model bellekten boşaltılır."
+      },
+      "provider": {
+        "title": "Sağlayıcı",
+        "description": "OpenAI uyumlu /audio/transcriptions uç noktasını sunan her servis çalışır; OpenRouter, OpenAI, Groq ve whisper.cpp ya da speaches gibi kendi barındırdığınız sunucular dahil."
+      },
+      "baseUrl": {
+        "title": "Temel URL",
+        "description": "Kendi sunucunuzun API kökü, /audio/transcriptions eki olmadan."
+      },
+      "apiKey": {
+        "title": "API Anahtarı",
+        "description": "Handy'nin ayarlarında yerel olarak saklanır ve yalnızca seçtiğiniz sağlayıcıya gönderilir.",
+        "placeholder": "Bu sağlayıcı için gerekli",
+        "placeholderOptional": "Kendi sunucularınız için isteğe bağlı"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Sağlayıcınızın sunduğu modelleri listelemek için yenileyin veya doğrudan bir model kimliği yazın.",
+        "placeholder": "örn. microsoft/mai-transcribe-2",
+        "refresh": "Kullanılabilir Modelleri Yenile"
+      },
+      "prompt": {
+        "title": "Kelime İpucu",
+        "description": "Transkripsiyonu yönlendirmek istediğiniz isimler ve teknik terimler. Özel kelimeleriniz otomatik olarak eklenir. Bu alanı desteklemeyen sağlayıcılar (OpenRouter) onu sessizce yok sayar.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Zaman Aşımı (saniye)",
+        "description": "Bir kayıttan vazgeçmeden önce sağlayıcının yanıtı için beklenecek süre."
+      },
+      "fallback": {
+        "label": "Yerel Modele Geri Dön",
+        "description": "Uzak istek başarısız olduğunda — çevrimdışı olma, zaman aşımı veya reddedilen anahtar — transkripsiyon yerel olarak yapılır. Uzak mod açıkken yerel model önceden yüklenmez; ilk başarısız istekte, ihtiyaç duyulduğunda yüklenir. Hatanın açıkça bildirilmesini ve yerel modelin hiç yüklenmemesini istiyorsanız bunu kapatın."
+      },
+      "test": {
+        "title": "Bağlantı",
+        "description": "URL'yi, anahtarı ve modeli doğrulamak için gerçek transkripsiyon akışından saniyenin çok kısa bir bölümü kadar sessizlik gönderir.",
+        "action": "Bağlantıyı Test Et",
+        "running": "Test ediliyor…"
       }
     }
   },

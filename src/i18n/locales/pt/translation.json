@@ -7,7 +7,9 @@
     "model": "Modelo",
     "quit": "Sair",
     "cancel": "Cancelar",
-    "secureInputWarning": "⚠ Atalhos bloqueados pelo Secure Input"
+    "secureInputWarning": "⚠ Atalhos bloqueados pelo Secure Input",
+    "modeRemote": "Remoto: {{provider}}",
+    "modeLocal": "Local: {{model}}"
   },
   "sidebar": {
     "general": "Geral",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Mostrar novidades",
         "description": "Mostrar notas de versão após atualizações do Handy"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Transcrição Remota",
+      "enable": {
+        "label": "Usar um modelo remoto",
+        "description": "Envie as gravações para uma API de voz para texto na nuvem ou auto-hospedada em vez de transcrever nesta máquina. Com esta opção ativada, o áudio sai do seu dispositivo e o modelo local é descarregado."
+      },
+      "provider": {
+        "title": "Provedor",
+        "description": "Funciona com qualquer endpoint que implemente a rota /audio/transcriptions da OpenAI, incluindo OpenRouter, OpenAI, Groq e servidores auto-hospedados como whisper.cpp ou speaches."
+      },
+      "baseUrl": {
+        "title": "URL Base",
+        "description": "Raiz da API do seu próprio servidor, sem o sufixo /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "Chave da API",
+        "description": "Armazenada localmente nas configurações do Handy e enviada apenas ao provedor selecionado.",
+        "placeholder": "Obrigatória para este provedor",
+        "placeholderOptional": "Opcional para servidores auto-hospedados"
+      },
+      "model": {
+        "title": "Modelo",
+        "description": "Atualize para listar os modelos oferecidos pelo seu provedor ou digite o identificador de um modelo diretamente.",
+        "placeholder": "ex.: microsoft/mai-transcribe-2",
+        "refresh": "Atualizar modelos disponíveis"
+      },
+      "prompt": {
+        "title": "Dica de Vocabulário",
+        "description": "Nomes e jargões para orientar a transcrição. Suas palavras personalizadas são adicionadas automaticamente. Provedores que ignoram este campo (OpenRouter) o descartam silenciosamente.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Tempo Limite (segundos)",
+        "description": "Quanto tempo esperar pelo provedor antes de desistir de uma gravação."
+      },
+      "fallback": {
+        "label": "Recorrer ao modelo local",
+        "description": "Quando a chamada remota falha — sem conexão, tempo limite esgotado ou chave rejeitada — a transcrição é feita localmente. O modelo local nunca é pré-carregado enquanto o modo remoto está ativo; ele é carregado sob demanda na primeira falha de uma chamada remota. Desative esta opção para falhar de forma explícita e nunca carregar um modelo local."
+      },
+      "test": {
+        "title": "Conexão",
+        "description": "Envia uma fração de segundo de silêncio pelo caminho real de transcrição para verificar a URL, a chave e o modelo.",
+        "action": "Testar conexão",
+        "running": "Testando…"
       }
     }
   },

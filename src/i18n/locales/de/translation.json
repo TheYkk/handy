@@ -7,7 +7,9 @@
     "model": "Modell",
     "quit": "Beenden",
     "cancel": "Abbrechen",
-    "secureInputWarning": "⚠ Tastenkürzel durch Secure Input blockiert"
+    "secureInputWarning": "⚠ Tastenkürzel durch Secure Input blockiert",
+    "modeRemote": "Remote: {{provider}}",
+    "modeLocal": "Lokal: {{model}}"
   },
   "sidebar": {
     "general": "Allgemein",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "Neuerungen anzeigen",
         "description": "Versionshinweise nach Handy-Updates anzeigen"
+      }
+    },
+    "remoteTranscription": {
+      "title": "Remote-Transkription",
+      "enable": {
+        "label": "Remote-Modell verwenden",
+        "description": "Sendet Aufnahmen an eine Cloud- oder selbst gehostete Speech-to-Text-API, statt sie auf diesem Gerät zu transkribieren. Wenn dies aktiv ist, verlässt Audio dein Gerät und das lokale Modell wird entladen."
+      },
+      "provider": {
+        "title": "Anbieter",
+        "description": "Jeder Endpunkt, der die Route /audio/transcriptions von OpenAI implementiert, funktioniert – darunter OpenRouter, OpenAI, Groq und selbst gehostete Server wie whisper.cpp oder speaches."
+      },
+      "baseUrl": {
+        "title": "Basis-URL",
+        "description": "API-Wurzel deines eigenen Servers, ohne den Zusatz /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "API-Schlüssel",
+        "description": "Wird lokal in den Einstellungen von Handy gespeichert und nur an den ausgewählten Anbieter gesendet.",
+        "placeholder": "Für diesen Anbieter erforderlich",
+        "placeholderOptional": "Bei selbst gehosteten Servern optional"
+      },
+      "model": {
+        "title": "Modell",
+        "description": "Aktualisiere, um die Modelle deines Anbieters aufzulisten, oder gib eine Modell-ID direkt ein.",
+        "placeholder": "z. B. microsoft/mai-transcribe-2",
+        "refresh": "Verfügbare Modelle aktualisieren"
+      },
+      "prompt": {
+        "title": "Vokabular-Hinweis",
+        "description": "Namen und Fachbegriffe, in deren Richtung die Transkription tendieren soll. Deine benutzerdefinierten Wörter werden automatisch angehängt. Anbieter, die dieses Feld ignorieren (OpenRouter), verwerfen es stillschweigend.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Timeout (Sekunden)",
+        "description": "Wie lange auf den Anbieter gewartet wird, bevor eine Aufnahme aufgegeben wird."
+      },
+      "fallback": {
+        "label": "Auf lokales Modell zurückfallen",
+        "description": "Wenn der Remote-Aufruf fehlschlägt – offline, Timeout oder ein abgelehnter Schlüssel –, wird stattdessen lokal transkribiert. Das lokale Modell wird bei aktiviertem Remote-Modus nie vorab geladen; es wird erst beim ersten fehlgeschlagenen Remote-Aufruf bei Bedarf geladen. Deaktiviere dies, um Fehler sichtbar zu machen und überhaupt kein lokales Modell zu laden."
+      },
+      "test": {
+        "title": "Verbindung",
+        "description": "Sendet den Bruchteil einer Sekunde Stille über den echten Transkriptionspfad, um URL, Schlüssel und Modell zu prüfen.",
+        "action": "Verbindung testen",
+        "running": "Test läuft…"
       }
     }
   },

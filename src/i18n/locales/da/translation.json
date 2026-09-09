@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Afslut",
     "cancel": "Annuller",
-    "secureInputWarning": "⚠ Genveje blokeret af Secure Input"
+    "secureInputWarning": "⚠ Genveje blokeret af Secure Input",
+    "modeRemote": "Ekstern: {{provider}}",
+    "modeLocal": "Lokal: {{model}}"
   },
   "sidebar": {
     "general": "Generelt",
@@ -627,6 +629,52 @@
           "description": "Højtydende tensor-bibliotek til maskinlæringsinferens på enheden",
           "details": "Handys lokale tale-til-tekst funktionalitet er bygget på transcribe.cpp og ggml. Tak for det fantastiske arbejde af Georgi Gerganov og bidragyderne."
         }
+      }
+    },
+    "remoteTranscription": {
+      "title": "Ekstern transskription",
+      "enable": {
+        "label": "Brug en ekstern model",
+        "description": "Send optagelser til en sky- eller selvhostet tale-til-tekst-API i stedet for at transskribere på denne maskine. Når dette er slået til, forlader lyden din enhed, og den lokale model frigøres."
+      },
+      "provider": {
+        "title": "Udbyder",
+        "description": "Alle endpoints, der implementerer OpenAI's /audio/transcriptions-rute, virker, herunder OpenRouter, OpenAI, Groq og selvhostede servere som whisper.cpp eller speaches."
+      },
+      "baseUrl": {
+        "title": "Basis-URL",
+        "description": "API-roden på din egen server, uden endelsen /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "API-nøgle",
+        "description": "Gemmes lokalt i Handys indstillinger og sendes kun til den udbyder, du har valgt.",
+        "placeholder": "Påkrævet for denne udbyder",
+        "placeholderOptional": "Valgfri for selvhostede servere"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Opdater for at se de modeller, din udbyder tilbyder, eller skriv et model-id direkte.",
+        "placeholder": "f.eks. microsoft/mai-transcribe-2",
+        "refresh": "Opdater tilgængelige modeller"
+      },
+      "prompt": {
+        "title": "Ordforrådstip",
+        "description": "Navne og fagudtryk, som transskriptionen skal trækkes mod. Dine brugerdefinerede ord tilføjes automatisk. Udbydere, der ignorerer dette felt (OpenRouter), kasserer det uden besked.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Timeout (sekunder)",
+        "description": "Hvor længe der ventes på udbyderen, før en optagelse opgives."
+      },
+      "fallback": {
+        "label": "Fald tilbage til lokal model",
+        "description": "Når det eksterne kald mislykkes – offline, timeout eller en afvist nøgle – transskriberes der lokalt i stedet. Den lokale model indlæses aldrig på forhånd, når ekstern transskription er slået til; den indlæses efter behov, første gang et eksternt kald mislykkes. Slå dette fra for at fejle tydeligt og slet ikke indlæse en lokal model."
+      },
+      "test": {
+        "title": "Forbindelse",
+        "description": "Sender en brøkdel af et sekunds stilhed gennem den rigtige transskriptionssti for at bekræfte URL, nøgle og model.",
+        "action": "Test forbindelse",
+        "running": "Tester…"
       }
     }
   },

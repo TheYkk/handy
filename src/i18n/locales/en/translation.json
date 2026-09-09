@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Quit",
     "cancel": "Cancel",
-    "secureInputWarning": "⚠ Shortcuts blocked by Secure Input"
+    "secureInputWarning": "⚠ Shortcuts blocked by Secure Input",
+    "modeRemote": "Remote: {{provider}}",
+    "modeLocal": "Local: {{model}}"
   },
   "sidebar": {
     "general": "General",
@@ -627,6 +629,52 @@
           "description": "High-performance tensor library for on-device machine learning inference",
           "details": "Handy's local speech-to-text is built on transcribe.cpp and ggml. Thanks to the amazing work by Georgi Gerganov and contributors."
         }
+      }
+    },
+    "remoteTranscription": {
+      "title": "Remote transcription",
+      "enable": {
+        "label": "Use a remote model",
+        "description": "Send recordings to a cloud or self-hosted speech-to-text API instead of transcribing on this machine. Audio leaves your device when this is on, and the local model is unloaded."
+      },
+      "provider": {
+        "title": "Provider",
+        "description": "Any endpoint that implements OpenAI's /audio/transcriptions route works, including OpenRouter, OpenAI, Groq, and self-hosted servers such as whisper.cpp or speaches."
+      },
+      "baseUrl": {
+        "title": "Base URL",
+        "description": "API root of your own server, without the /audio/transcriptions suffix."
+      },
+      "apiKey": {
+        "title": "API key",
+        "description": "Stored locally in Handy's settings and sent only to the provider you selected.",
+        "placeholder": "Required for this provider",
+        "placeholderOptional": "Optional for self-hosted servers"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Refresh to list the models your provider offers, or type a model id directly.",
+        "placeholder": "e.g. microsoft/mai-transcribe-2",
+        "refresh": "Refresh available models"
+      },
+      "prompt": {
+        "title": "Vocabulary hint",
+        "description": "Names and jargon to bias the transcript toward. Your custom words are appended automatically. Providers that ignore this field (OpenRouter) drop it silently.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Timeout (seconds)",
+        "description": "How long to wait for the provider before giving up on a recording."
+      },
+      "fallback": {
+        "label": "Fall back to local model",
+        "description": "When the remote call fails — offline, timeout, or a rejected key — transcribe locally instead. The local model is never pre-loaded while remote is on; it is loaded on demand the first time a remote call fails. Turn this off to fail loudly and never load a local model at all."
+      },
+      "test": {
+        "title": "Connection",
+        "description": "Sends a fraction of a second of silence through the real transcription path to verify the URL, key, and model.",
+        "action": "Test connection",
+        "running": "Testing…"
       }
     }
   },

@@ -7,7 +7,9 @@
     "model": "모델",
     "quit": "종료",
     "cancel": "취소",
-    "secureInputWarning": "⚠ Secure Input으로 단축키가 차단됨"
+    "secureInputWarning": "⚠ Secure Input으로 단축키가 차단됨",
+    "modeRemote": "원격: {{provider}}",
+    "modeLocal": "로컬: {{model}}"
   },
   "sidebar": {
     "general": "일반",
@@ -627,6 +629,52 @@
       "whatsNewUpdates": {
         "label": "새 소식 표시",
         "description": "Handy 업데이트 후 릴리스 노트를 표시합니다"
+      }
+    },
+    "remoteTranscription": {
+      "title": "원격 전사",
+      "enable": {
+        "label": "원격 모델 사용",
+        "description": "이 컴퓨터에서 전사하는 대신 클라우드 또는 자체 호스팅 음성 인식 API로 녹음을 전송합니다. 켜져 있는 동안 오디오가 기기 밖으로 나가며 로컬 모델은 언로드됩니다."
+      },
+      "provider": {
+        "title": "제공자",
+        "description": "OpenAI의 /audio/transcriptions 경로를 구현한 엔드포인트라면 모두 사용할 수 있습니다. OpenRouter, OpenAI, Groq는 물론 whisper.cpp나 speaches 같은 자체 호스팅 서버도 지원합니다."
+      },
+      "baseUrl": {
+        "title": "기본 URL",
+        "description": "직접 운영하는 서버의 API 루트입니다. /audio/transcriptions 접미사는 제외하세요."
+      },
+      "apiKey": {
+        "title": "API 키",
+        "description": "Handy 설정에 로컬로 저장되며 선택한 제공자에게만 전송됩니다.",
+        "placeholder": "이 제공자에는 필수",
+        "placeholderOptional": "자체 호스팅 서버에서는 선택 사항"
+      },
+      "model": {
+        "title": "모델",
+        "description": "새로고침하면 제공자가 지원하는 모델 목록을 불러옵니다. 모델 ID를 직접 입력할 수도 있습니다.",
+        "placeholder": "예: microsoft/mai-transcribe-2",
+        "refresh": "사용 가능한 모델 새로고침"
+      },
+      "prompt": {
+        "title": "어휘 힌트",
+        "description": "전사 결과에 반영하고 싶은 이름과 전문 용어입니다. 사용자 정의 단어는 자동으로 추가됩니다. 이 필드를 무시하는 제공자(OpenRouter)는 조용히 버립니다.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "제한 시간(초)",
+        "description": "녹음 전사를 포기하기 전에 제공자의 응답을 기다리는 시간입니다."
+      },
+      "fallback": {
+        "label": "로컬 모델로 대체",
+        "description": "원격 호출이 실패하면(오프라인, 제한 시간 초과, 키 거부) 대신 로컬에서 전사합니다. 원격 모드가 켜져 있는 동안 로컬 모델은 미리 불러오지 않고, 원격 호출이 처음 실패할 때 필요에 따라 불러옵니다. 이 옵션을 끄면 오류를 그대로 알리고 로컬 모델은 전혀 불러오지 않습니다."
+      },
+      "test": {
+        "title": "연결",
+        "description": "실제 전사 경로로 1초 미만의 무음을 전송해 URL, 키, 모델을 확인합니다.",
+        "action": "연결 테스트",
+        "running": "테스트 중…"
       }
     }
   },
