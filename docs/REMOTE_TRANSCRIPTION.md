@@ -123,6 +123,27 @@ Cleanup runs every time an entry is saved, and is driven by the
 Deleting an entry removes the database row _and_ the WAV file. Entries you mark
 as saved are exempt from every cleanup rule.
 
+## Before you publish releases
+
+The updater is **disabled by default in this fork**, and this is deliberate.
+Upstream's config pointed at `cjpais/Handy` releases, signed with upstream's
+minisign key. Left as-is, a Handy Remote install would happily "update" itself
+into an upstream Handy build — losing this feature while keeping the fork's data
+directory.
+
+To ship your own releases:
+
+1. Generate a signing keypair: `bunx @tauri-apps/cli signer generate`.
+2. Put the public key in `tauri.conf.json` under `plugins.updater.pubkey`, and
+   set `endpoints` to your own repository.
+3. Add the private key and its password to CI as
+   `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
+4. Flip `default_update_checks_enabled()` in `src-tauri/src/settings.rs` back to
+   `true`.
+
+The `endpoints` value currently in the config is a placeholder pointing at this
+fork's presumed repository — correct it to yours.
+
 ## Implementation
 
 - `src-tauri/src/remote_transcription.rs` — the client: WAV encoding, multipart

@@ -610,7 +610,12 @@ fn default_autostart_enabled() -> bool {
 }
 
 fn default_update_checks_enabled() -> bool {
-    true
+    // Off in this fork: there is no published release channel yet, and the
+    // updater must never be able to pull an upstream Handy build over a Handy
+    // Remote install (different feature set, same data directory). Flip this to
+    // `true` after publishing releases signed with this fork's own minisign key
+    // and updating `pubkey` + `endpoints` in tauri.conf.json.
+    false
 }
 
 fn default_show_whats_new_on_update() -> bool {
