@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Surt",
     "cancel": "Cancel·la",
-    "secureInputWarning": "⚠ Dreceres blocades per l'entrada segura"
+    "secureInputWarning": "⚠ Dreceres blocades per l'entrada segura",
+    "modeRemote": "Remot: {{provider}}",
+    "modeLocal": "Local: {{model}}"
   },
   "sidebar": {
     "general": "General",
@@ -653,6 +655,52 @@
           "description": "Biblioteca de tensors d'alt rendiment per a la inferència d'aprenentatge automàtic al dispositiu",
           "details": "La transcripció local de veu a text del Handy es basa en el transcribe.cpp i el ggml. Gràcies a la gran feina de Georgi Gerganov i dels col·laboradors."
         }
+      }
+    },
+    "remoteTranscription": {
+      "title": "Transcripció remota",
+      "enable": {
+        "label": "Utilitza un model remot",
+        "description": "Envia les gravacions a una API de veu a text al núvol o autoallotjada en lloc de transcriure en aquest equip. Quan està activat, l'àudio surt del dispositiu i el model local es descarrega."
+      },
+      "provider": {
+        "title": "Proveïdor",
+        "description": "ElevenLabs Scribe o qualsevol punt final que implementi la ruta /audio/transcriptions d'OpenAI, com ara OpenRouter, OpenAI, Groq i servidors autoallotjats com whisper.cpp o speaches."
+      },
+      "baseUrl": {
+        "title": "URL base",
+        "description": "Arrel de l'API del vostre servidor, sense el sufix /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "Clau de l'API",
+        "description": "Es desa localment a la configuració de Handy i només s'envia al proveïdor seleccionat.",
+        "placeholder": "Obligatòria per a aquest proveïdor",
+        "placeholderOptional": "Opcional per a servidors autoallotjats"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Actualitzeu per llistar els models que ofereix el proveïdor, o escriviu directament l'identificador d'un model.",
+        "placeholder": "p. ex. microsoft/mai-transcribe-2 o scribe_v2",
+        "refresh": "Actualitza els models disponibles"
+      },
+      "prompt": {
+        "title": "Pista de vocabulari",
+        "description": "Noms i termes tècnics cap als quals orientar la transcripció, separats per comes. Les paraules personalitzades s'hi afegeixen automàticament. Els proveïdors que ignoren aquest camp (OpenRouter) el descarten sense avisar. ElevenLabs rep cada terme com a keyterm, amb un recàrrec del 20%.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Temps d'espera (segons)",
+        "description": "Quant de temps s'espera el proveïdor abans de donar per perduda una gravació."
+      },
+      "fallback": {
+        "label": "Recorre al model local",
+        "description": "Quan la crida remota falla (sense connexió, temps esgotat o clau rebutjada), transcriu localment. El model local no es precarrega mai mentre el mode remot està activat; es carrega sota demanda el primer cop que falla una crida remota. Desactiveu-ho per fallar explícitament i no carregar mai cap model local."
+      },
+      "test": {
+        "title": "Connexió",
+        "description": "Envia una fracció de segon de silenci pel camí real de transcripció per verificar l'URL, la clau i el model.",
+        "action": "Prova la connexió",
+        "running": "S'està provant…"
       }
     }
   },

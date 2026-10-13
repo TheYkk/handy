@@ -7,7 +7,9 @@
     "model": "Model",
     "quit": "Keluar",
     "cancel": "Batal",
-    "secureInputWarning": "⚠ Pintasan diblokir oleh Secure Input"
+    "secureInputWarning": "⚠ Pintasan diblokir oleh Secure Input",
+    "modeRemote": "Jarak jauh: {{provider}}",
+    "modeLocal": "Lokal: {{model}}"
   },
   "sidebar": {
     "general": "Umum",
@@ -653,6 +655,52 @@
           "description": "Pustaka tensor berkinerja tinggi untuk inferensi pembelajaran mesin di perangkat",
           "details": "Fitur ucapan-ke-teks lokal Handy dibangun menggunakan transcribe.cpp dan ggml. Terima kasih kepada Georgi Gerganov dan para kontributor atas karya luar biasa mereka."
         }
+      }
+    },
+    "remoteTranscription": {
+      "title": "Transkripsi jarak jauh",
+      "enable": {
+        "label": "Gunakan model jarak jauh",
+        "description": "Kirim rekaman ke API ucapan-ke-teks di cloud atau server sendiri alih-alih mentranskripsi di perangkat ini. Saat aktif, audio keluar dari perangkat Anda dan model lokal dibongkar dari memori."
+      },
+      "provider": {
+        "title": "Penyedia",
+        "description": "ElevenLabs Scribe, atau endpoint apa pun yang menerapkan rute /audio/transcriptions OpenAI, termasuk OpenRouter, OpenAI, Groq, dan server sendiri seperti whisper.cpp atau speaches."
+      },
+      "baseUrl": {
+        "title": "URL dasar",
+        "description": "Akar API server Anda, tanpa akhiran /audio/transcriptions."
+      },
+      "apiKey": {
+        "title": "Kunci API",
+        "description": "Disimpan secara lokal di pengaturan Handy dan hanya dikirim ke penyedia yang Anda pilih.",
+        "placeholder": "Wajib untuk penyedia ini",
+        "placeholderOptional": "Opsional untuk server sendiri"
+      },
+      "model": {
+        "title": "Model",
+        "description": "Segarkan untuk menampilkan model yang ditawarkan penyedia, atau ketik ID model secara langsung.",
+        "placeholder": "mis. microsoft/mai-transcribe-2 atau scribe_v2",
+        "refresh": "Segarkan model yang tersedia"
+      },
+      "prompt": {
+        "title": "Petunjuk kosakata",
+        "description": "Nama dan istilah khusus untuk mengarahkan transkrip, dipisahkan koma. Kata kustom Anda ditambahkan secara otomatis. Penyedia yang mengabaikan kolom ini (OpenRouter) membuangnya tanpa pemberitahuan. ElevenLabs menerima setiap istilah sebagai keyterm, dengan biaya tambahan 20%.",
+        "placeholder": "Handy, OpenRouter, Tauri"
+      },
+      "timeout": {
+        "title": "Batas waktu (detik)",
+        "description": "Berapa lama menunggu penyedia sebelum menyerah pada sebuah rekaman."
+      },
+      "fallback": {
+        "label": "Beralih ke model lokal",
+        "description": "Saat panggilan jarak jauh gagal — offline, waktu habis, atau kunci ditolak — transkripsi secara lokal. Model lokal tidak pernah dimuat lebih dulu selama mode jarak jauh aktif; model dimuat sesuai kebutuhan saat panggilan jarak jauh pertama kali gagal. Matikan ini agar langsung gagal dan tidak pernah memuat model lokal."
+      },
+      "test": {
+        "title": "Koneksi",
+        "description": "Mengirim keheningan sepersekian detik melalui jalur transkripsi sebenarnya untuk memverifikasi URL, kunci, dan model.",
+        "action": "Uji koneksi",
+        "running": "Menguji…"
       }
     }
   },
