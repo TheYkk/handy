@@ -15,9 +15,9 @@ import { ModelSelect } from "../PostProcessingSettingsApi/ModelSelect";
 import type { ModelOption } from "../PostProcessingSettingsApi/types";
 
 /// Settings for sending recordings to a remote speech-to-text endpoint instead
-/// of the bundled local engine. Every provider here speaks the same
-/// OpenAI-compatible `/audio/transcriptions` dialect, which is why hosted APIs
-/// (OpenRouter, OpenAI, Groq) and self-hosted servers share one form.
+/// of the bundled local engine. Hosted APIs (OpenRouter, OpenAI, Groq,
+/// ElevenLabs) and self-hosted servers share one form; the backend maps the
+/// fields onto each provider's request format.
 const RemoteTranscriptionSettingsComponent: React.FC = () => {
   const { t } = useTranslation();
   const {

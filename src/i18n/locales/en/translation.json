@@ -665,7 +665,7 @@
       },
       "provider": {
         "title": "Provider",
-        "description": "Any endpoint that implements OpenAI's /audio/transcriptions route works, including OpenRouter, OpenAI, Groq, and self-hosted servers such as whisper.cpp or speaches."
+        "description": "ElevenLabs Scribe, or any endpoint that implements OpenAI's /audio/transcriptions route, including OpenRouter, OpenAI, Groq, and self-hosted servers such as whisper.cpp or speaches."
       },
       "baseUrl": {
         "title": "Base URL",
@@ -680,12 +680,12 @@
       "model": {
         "title": "Model",
         "description": "Refresh to list the models your provider offers, or type a model id directly.",
-        "placeholder": "e.g. microsoft/mai-transcribe-2",
+        "placeholder": "e.g. microsoft/mai-transcribe-2 or scribe_v2",
         "refresh": "Refresh available models"
       },
       "prompt": {
         "title": "Vocabulary hint",
-        "description": "Names and jargon to bias the transcript toward. Your custom words are appended automatically. Providers that ignore this field (OpenRouter) drop it silently.",
+        "description": "Names and jargon to bias the transcript toward, separated by commas. Your custom words are appended automatically. Providers that ignore this field (OpenRouter) drop it silently. ElevenLabs receives each term as a keyterm, which it bills at a 20% surcharge.",
         "placeholder": "Handy, OpenRouter, Tauri"
       },
       "timeout": {

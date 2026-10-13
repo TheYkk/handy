@@ -1237,13 +1237,25 @@ export type PostProcessApiFormat =
 export type PostProcessProvider = { id: string; label: string; base_url: string; allow_base_url_edit?: boolean; models_endpoint?: string | null; supports_structured_output?: boolean; api_format?: PostProcessApiFormat }
 export type RecordingRetentionPeriod = "never" | "preserve_limit" | "days_3" | "weeks_2" | "months_3"
 /**
- * A remote speech-to-text endpoint that speaks the OpenAI
+ * Wire format a remote speech-to-text endpoint speaks.
+ */
+export type RemoteTranscriptionApiFormat = 
+/**
+ * OpenAI-compatible `/audio/transcriptions` with Bearer auth.
+ */
+"openai" | 
+/**
+ * ElevenLabs Scribe: `/speech-to-text` with `xi-api-key` auth.
+ */
+"elevenlabs"
+/**
+ * A remote speech-to-text endpoint. Most speak the OpenAI
  * `/audio/transcriptions` dialect (OpenRouter, OpenAI, Groq, and the many
  * self-hosted servers that copy it: whisper.cpp's `server`, speaches,
- * faster-whisper-server, vLLM, …).
+ * faster-whisper-server, vLLM, …); `api_format` marks the ones that don't.
  * 
- * `base_url` is the API root *without* the `/audio/transcriptions` suffix, so
- * the same value can also be used to list models via `/models`.
+ * `base_url` is the API root *without* the route suffix
+ * (`/audio/transcriptions`, `/speech-to-text`).
  */
 export type RemoteTranscriptionProvider = { id: string; label: string; base_url: string; 
 /**
@@ -1273,7 +1285,12 @@ models_query?: string | null;
  * route. When it does, "translate to English" can be honored remotely;
  * otherwise the setting is ignored for this provider.
  */
-supports_translations?: boolean }
+supports_translations?: boolean; 
+/**
+ * Request format. Stores written before ElevenLabs support have no
+ * field, and every provider back then was OpenAI-compatible.
+ */
+api_format?: RemoteTranscriptionApiFormat }
 export type SecretMap = Partial<{ [key in string]: string }>
 export type SecureInputStatus = { 
 /**

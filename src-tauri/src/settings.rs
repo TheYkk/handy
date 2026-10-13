@@ -121,13 +121,24 @@ pub struct PostProcessProvider {
     pub api_format: PostProcessApiFormat,
 }
 
-/// A remote speech-to-text endpoint that speaks the OpenAI
+/// Wire format a remote speech-to-text endpoint speaks.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default, PartialEq, Eq, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum RemoteTranscriptionApiFormat {
+    /// OpenAI-compatible `/audio/transcriptions` with Bearer auth.
+    #[default]
+    OpenAi,
+    /// ElevenLabs Scribe: `/speech-to-text` with `xi-api-key` auth.
+    ElevenLabs,
+}
+
+/// A remote speech-to-text endpoint. Most speak the OpenAI
 /// `/audio/transcriptions` dialect (OpenRouter, OpenAI, Groq, and the many
 /// self-hosted servers that copy it: whisper.cpp's `server`, speaches,
-/// faster-whisper-server, vLLM, …).
+/// faster-whisper-server, vLLM, …); `api_format` marks the ones that don't.
 ///
-/// `base_url` is the API root *without* the `/audio/transcriptions` suffix, so
-/// the same value can also be used to list models via `/models`.
+/// `base_url` is the API root *without* the route suffix
+/// (`/audio/transcriptions`, `/speech-to-text`).
 #[derive(Serialize, Deserialize, Debug, Clone, Type)]
 pub struct RemoteTranscriptionProvider {
     pub id: String,
@@ -156,6 +167,10 @@ pub struct RemoteTranscriptionProvider {
     /// otherwise the setting is ignored for this provider.
     #[serde(default)]
     pub supports_translations: bool,
+    /// Request format. Stores written before ElevenLabs support have no
+    /// field, and every provider back then was OpenAI-compatible.
+    #[serde(default)]
+    pub api_format: RemoteTranscriptionApiFormat,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
@@ -782,6 +797,7 @@ fn default_remote_transcription_providers() -> Vec<RemoteTranscriptionProvider> 
             models_query: Some("output_modalities=transcription".to_string()),
             // OpenRouter exposes transcription only; there is no /audio/translations.
             supports_translations: false,
+            api_format: RemoteTranscriptionApiFormat::OpenAi,
         },
         RemoteTranscriptionProvider {
             id: "openai".to_string(),
@@ -792,6 +808,7 @@ fn default_remote_transcription_providers() -> Vec<RemoteTranscriptionProvider> 
             default_model: "gpt-4o-mini-transcribe".to_string(),
             models_query: None,
             supports_translations: true,
+            api_format: RemoteTranscriptionApiFormat::OpenAi,
         },
         RemoteTranscriptionProvider {
             id: "groq".to_string(),
@@ -802,6 +819,7 @@ fn default_remote_transcription_providers() -> Vec<RemoteTranscriptionProvider> 
             default_model: "whisper-large-v3-turbo".to_string(),
             models_query: None,
             supports_translations: true,
+            api_format: RemoteTranscriptionApiFormat::OpenAi,
         },
         RemoteTranscriptionProvider {
             id: "deepinfra".to_string(),
@@ -812,6 +830,19 @@ fn default_remote_transcription_providers() -> Vec<RemoteTranscriptionProvider> 
             default_model: "openai/whisper-large-v3-turbo".to_string(),
             models_query: None,
             supports_translations: false,
+            api_format: RemoteTranscriptionApiFormat::OpenAi,
+        },
+        RemoteTranscriptionProvider {
+            id: "elevenlabs".to_string(),
+            label: "ElevenLabs".to_string(),
+            base_url: "https://api.elevenlabs.io/v1".to_string(),
+            allow_base_url_edit: false,
+            requires_api_key: true,
+            default_model: "scribe_v2".to_string(),
+            models_query: None,
+            // Scribe transcribes only; there is no translate-to-English mode.
+            supports_translations: false,
+            api_format: RemoteTranscriptionApiFormat::ElevenLabs,
         },
         RemoteTranscriptionProvider {
             id: REMOTE_TRANSCRIPTION_CUSTOM_PROVIDER_ID.to_string(),
@@ -823,6 +854,7 @@ fn default_remote_transcription_providers() -> Vec<RemoteTranscriptionProvider> 
             default_model: "whisper-1".to_string(),
             models_query: None,
             supports_translations: true,
+            api_format: RemoteTranscriptionApiFormat::OpenAi,
         },
     ]
 }
@@ -984,6 +1016,45 @@ where
 
 fn default_typing_tool() -> TypingTool {
     TypingTool::Auto
+}
+
+/// Add built-in remote transcription providers missing from an older store,
+/// and keep the fixed fields of existing built-ins in sync. The provider list
+/// is persisted whole, so without this a provider added in a new release
+/// (ElevenLabs) would never appear for existing users.
+fn ensure_remote_transcription_defaults(settings: &mut AppSettings) -> bool {
+    let mut changed = false;
+    for provider in default_remote_transcription_providers() {
+        match settings
+            .remote_transcription_providers
+            .iter_mut()
+            .find(|p| p.id == provider.id)
+        {
+            Some(existing) => {
+                if existing.api_format != provider.api_format {
+                    existing.api_format = provider.api_format;
+                    changed = true;
+                }
+                if existing.supports_translations != provider.supports_translations {
+                    existing.supports_translations = provider.supports_translations;
+                    changed = true;
+                }
+            }
+            None => {
+                // Keep the self-hosted entry last, where the picker expects it.
+                let custom_index = settings
+                    .remote_transcription_providers
+                    .iter()
+                    .position(|p| p.id == REMOTE_TRANSCRIPTION_CUSTOM_PROVIDER_ID)
+                    .unwrap_or(settings.remote_transcription_providers.len());
+                settings
+                    .remote_transcription_providers
+                    .insert(custom_index, provider);
+                changed = true;
+            }
+        }
+    }
+    changed
 }
 
 fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
@@ -1304,7 +1375,9 @@ pub fn get_settings(app: &AppHandle) -> AppSettings {
         default_settings
     };
 
-    if ensure_post_process_defaults(&mut settings) {
+    let post_process_changed = ensure_post_process_defaults(&mut settings);
+    let remote_changed = ensure_remote_transcription_defaults(&mut settings);
+    if post_process_changed || remote_changed {
         store.set("settings", serde_json::to_value(&settings).unwrap());
     }
 
@@ -2007,6 +2080,55 @@ mod tests {
         let format_of = |id: &str| settings.post_process_provider(id).unwrap().api_format;
         assert_eq!(format_of("anthropic"), PostProcessApiFormat::Anthropic);
         assert_eq!(format_of("custom"), PostProcessApiFormat::Anthropic);
+    }
+
+    #[test]
+    fn remote_transcription_defaults_add_elevenlabs_to_older_stores() {
+        // A store saved before ElevenLabs support: no ElevenLabs entry, and no
+        // `api_format` field, which deserializes as OpenAI.
+        let mut settings = get_default_settings();
+        settings
+            .remote_transcription_providers
+            .retain(|p| p.id != "elevenlabs");
+        let custom = settings
+            .remote_transcription_provider_mut(REMOTE_TRANSCRIPTION_CUSTOM_PROVIDER_ID)
+            .unwrap();
+        custom.base_url = "http://my-box:9000/v1".into();
+
+        assert!(ensure_remote_transcription_defaults(&mut settings));
+
+        let elevenlabs = settings
+            .remote_transcription_provider("elevenlabs")
+            .unwrap();
+        assert_eq!(
+            elevenlabs.api_format,
+            RemoteTranscriptionApiFormat::ElevenLabs
+        );
+        assert_eq!(
+            settings.remote_transcription_providers.last().unwrap().id,
+            REMOTE_TRANSCRIPTION_CUSTOM_PROVIDER_ID,
+            "the self-hosted entry stays last"
+        );
+        assert_eq!(
+            settings
+                .remote_transcription_provider(REMOTE_TRANSCRIPTION_CUSTOM_PROVIDER_ID)
+                .unwrap()
+                .base_url,
+            "http://my-box:9000/v1",
+            "user-edited fields survive the migration"
+        );
+        assert!(!ensure_remote_transcription_defaults(&mut settings));
+    }
+
+    #[test]
+    fn remote_transcription_provider_without_api_format_deserializes_as_openai() {
+        let provider: RemoteTranscriptionProvider = serde_json::from_value(serde_json::json!({
+            "id": "groq",
+            "label": "Groq",
+            "base_url": "https://api.groq.com/openai/v1"
+        }))
+        .unwrap();
+        assert_eq!(provider.api_format, RemoteTranscriptionApiFormat::OpenAi);
     }
 
     #[test]
