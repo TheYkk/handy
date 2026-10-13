@@ -4,7 +4,7 @@
 > optional **remote transcription**: send recordings to a cloud or self-hosted
 > speech-to-text API — for example
 > [`microsoft/mai-transcribe-2`](https://openrouter.ai/microsoft/mai-transcribe-2)
-> on OpenRouter — instead of transcribing locally. It is off by default, so
+> on OpenRouter or ElevenLabs Scribe v2 — instead of transcribing locally. It is off by default, so
 > upstream behavior is unchanged until you turn it on.
 >
 > See **[docs/REMOTE_TRANSCRIPTION.md](docs/REMOTE_TRANSCRIPTION.md)** for setup,

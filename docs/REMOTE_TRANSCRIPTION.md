@@ -1,8 +1,8 @@
 # Remote transcription
 
 Handy transcribes locally by default. This fork adds an option to send recordings
-to a remote speech-to-text API instead — a cloud provider such as OpenRouter, or
-a server you host yourself.
+to a remote speech-to-text API instead — a cloud provider such as OpenRouter or
+ElevenLabs, or a server you host yourself.
 
 The motivating case is [`microsoft/mai-transcribe-2`](https://openrouter.ai/microsoft/mai-transcribe-2)
 on OpenRouter: 60 languages with automatic language identification, ranked #1 on
@@ -11,9 +11,13 @@ implementation is specific to it.
 
 ## What it works with
 
-One wire format covers every provider here: the OpenAI
-`POST /audio/transcriptions` route with a `multipart/form-data` body. Providers
-ship preconfigured; `Custom` is for anything else.
+Two wire formats are supported, both `multipart/form-data`:
+
+- **OpenAI-compatible** `POST /audio/transcriptions` with `Authorization: Bearer`.
+  Every provider below except ElevenLabs.
+- **ElevenLabs Scribe** `POST /v1/speech-to-text` with an `xi-api-key` header.
+
+Providers ship preconfigured; `Custom` is for any other OpenAI-compatible server.
 
 | Provider             | Base URL                                  | Default model                   | Key required |
 | -------------------- | ----------------------------------------- | ------------------------------- | ------------ |
@@ -21,11 +25,40 @@ ship preconfigured; `Custom` is for anything else.
 | OpenAI               | `https://api.openai.com/v1`               | `gpt-4o-mini-transcribe`        | yes          |
 | Groq                 | `https://api.groq.com/openai/v1`          | `whisper-large-v3-turbo`        | yes          |
 | DeepInfra            | `https://api.deepinfra.com/v1/openai`     | `openai/whisper-large-v3-turbo` | yes          |
+| ElevenLabs           | `https://api.elevenlabs.io/v1`            | `scribe_v2`                     | yes          |
 | Custom (self-hosted) | editable, e.g. `http://localhost:8000/v1` | `whisper-1`                     | no           |
 
 `Custom` has been used against whisper.cpp's `server`, speaches,
 faster-whisper-server, and vLLM. Any server that copies OpenAI's route should
 work; if it returns bare text instead of JSON, that is handled too.
+
+### ElevenLabs Scribe
+
+[Scribe v2](https://elevenlabs.io/docs/api-reference/speech-to-text/convert) is
+ElevenLabs' batch speech-to-text model: 90+ languages with automatic detection.
+How Handy's settings map onto the request:
+
+| Handy                         | Scribe request                                               |
+| ----------------------------- | ------------------------------------------------------------ |
+| Model                         | `model_id`: `scribe_v2` (default) or `scribe_v1`             |
+| Language (not auto)           | `language_code`; auto-detect omits it                        |
+| Vocabulary hint, custom words | `keyterms`, one form part per term                           |
+| Audio                         | raw 16 kHz mono PCM with `file_format=pcm_s16le_16`, not WAV |
+| (fixed)                       | `tag_audio_events=false`, so "(laughter)" never gets pasted  |
+
+- **Keyterms cost extra.** ElevenLabs bills keyterm requests at a 20%
+  surcharge, so keyterms are sent only when you have a vocabulary hint or custom
+  words. The hint is split on commas; terms ElevenLabs would reject (50+
+  characters, more than 5 words, or containing `< > { } [ ] \`) are dropped
+  rather than failing the recording.
+- **Raw PCM** skips server-side decoding. In a quick test it came back about
+  0.3 s faster than the same clip as WAV.
+- **The model list is fixed** to `scribe_v2` and `scribe_v1`. ElevenLabs'
+  `/models` lists only text-to-speech models, and scoped API keys often can't
+  read it. You can still type any other model id.
+- **No translation.** Scribe only transcribes, so "Translate to English" is
+  ignored for this provider.
+- An API key restricted to the **Speech to Text** permission is enough.
 
 ## Setup
 
@@ -44,14 +77,14 @@ text is in the tray tooltip.
 
 ## Settings
 
-| Setting                  | Default                                   | Notes                                                                    |
-| ------------------------ | ----------------------------------------- | ------------------------------------------------------------------------ |
-| Use a remote model       | off                                       | When on, audio leaves your device.                                       |
-| Provider / model         | OpenRouter · `microsoft/mai-transcribe-2` | Model is per provider.                                                   |
-| API key                  | empty                                     | Stored in Handy's settings store, redacted from logs.                    |
-| Vocabulary hint          | empty                                     | Sent as OpenAI's `prompt`. Your custom words are appended automatically. |
-| Timeout                  | 30 s                                      | Upstream providers time out around 60 s per request anyway.              |
-| Fall back to local model | on                                        | On failure, transcribe locally instead.                                  |
+| Setting                  | Default                                   | Notes                                                                                                 |
+| ------------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Use a remote model       | off                                       | When on, audio leaves your device.                                                                    |
+| Provider / model         | OpenRouter · `microsoft/mai-transcribe-2` | Model is per provider.                                                                                |
+| API key                  | empty                                     | Stored in Handy's settings store, redacted from logs.                                                 |
+| Vocabulary hint          | empty                                     | Sent as OpenAI's `prompt`, or as ElevenLabs `keyterms`. Your custom words are appended automatically. |
+| Timeout                  | 30 s                                      | Upstream providers time out around 60 s per request anyway.                                           |
+| Fall back to local model | on                                        | On failure, transcribe locally instead.                                                               |
 
 ## Behavior worth knowing
 
@@ -77,8 +110,8 @@ are additionally sent as a decode hint; providers that ignore `prompt`
 (OpenRouter does) simply drop it.
 
 **"Translate to English" is only honored where the provider implements it.**
-OpenAI and Groq expose `/audio/translations`; OpenRouter does not, so the setting
-is ignored there rather than producing a 404.
+OpenAI and Groq expose `/audio/translations`; OpenRouter, DeepInfra and
+ElevenLabs do not, so the setting is ignored there rather than producing a 404.
 
 **Long recordings.** Multipart uploads cap at 25 MB, about 13 minutes of 16 kHz
 mono WAV, and providers time out near 60 s of processing. Dictation-length clips
@@ -146,15 +179,18 @@ fork's presumed repository — correct it to yours.
 
 ## Implementation
 
-- `src-tauri/src/remote_transcription.rs` — the client: WAV encoding, multipart
-  request, response parsing, model listing, connection test.
+- `src-tauri/src/remote_transcription.rs` — the client: WAV/PCM encoding, the
+  OpenAI and ElevenLabs request formats, response parsing, model listing,
+  connection test.
 - `src-tauri/src/managers/transcription.rs` — `try_remote_transcribe` runs before
   the local engine; `ensure_local_engine_loaded` is the lazy fallback.
-- `src-tauri/src/settings.rs` — `RemoteTranscriptionProvider` and the
-  `remote_transcription_*` settings.
+- `src-tauri/src/settings.rs` — `RemoteTranscriptionProvider` (with its
+  `api_format`), the `remote_transcription_*` settings, and
+  `ensure_remote_transcription_defaults`, which adds new built-in providers to
+  existing settings stores.
 - `src-tauri/src/shortcut/mod.rs` — Tauri commands.
 - `src/components/settings/remote-transcription/` — the settings UI.
 
-Tests live next to the client in `remote_transcription.rs`, including two that
+Tests live next to the client in `remote_transcription.rs`, including three that
 run a real HTTP request against a loopback stub server to check the multipart
-body, the auth header, and error handling.
+body, the auth header, and error handling for both formats.
