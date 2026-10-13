@@ -400,6 +400,15 @@
       "fillerWordRemoval": {
         "title": "移除语气词",
         "description": "从转录中移除常见的语气词。关闭此选项即可保留这些词。"
+      },
+      "chineseScript": {
+        "title": "简繁转换",
+        "description": "将普通话和粤语转录输出为简体或繁体中文。其他语言不受影响。",
+        "options": {
+          "asTranscribed": "保持原样",
+          "simplified": "简体",
+          "traditional": "繁体"
+        }
       }
     },
     "postProcessing": {
@@ -407,10 +416,18 @@
         "title": "快捷键"
       },
       "api": {
-        "title": "API（兼容 OpenAI）",
+        "title": "API",
         "provider": {
           "title": "提供商",
-          "description": "选择一个兼容 OpenAI 的提供商。"
+          "description": "选择一个兼容 OpenAI 或 Anthropic 的提供商。"
+        },
+        "apiFormat": {
+          "title": "API 格式",
+          "description": "自定义端点期望的请求格式。",
+          "options": {
+            "openai": "兼容 OpenAI (Chat Completions)",
+            "anthropic": "Anthropic Messages"
+          }
         },
         "appleIntelligence": {
           "unavailable": "Apple Intelligence 在此设备上不可用。需要运行 macOS Tahoe（26.0）或更高版本的 Apple Silicon Mac，并在系统设置中启用 Apple Intelligence。"
@@ -418,7 +435,8 @@
         "baseUrl": {
           "title": "基础 URL",
           "description": "所选提供商的 API 基础 URL。仅自定义提供商可编辑。",
-          "placeholder": "https://api.openai.com/v1"
+          "placeholder": "https://api.openai.com/v1",
+          "placeholderAnthropic": "https://api.anthropic.com/v1"
         },
         "apiKey": {
           "title": "API 密钥",
@@ -462,6 +480,7 @@
       "loading": "加载历史记录中...",
       "empty": "还没有转录记录。开始录制以建立您的历史记录！",
       "copyToClipboard": "复制转录到剪贴板",
+      "copyError": "无法将转录复制到剪贴板。",
       "save": "保存转录",
       "unsave": "从已保存中移除",
       "delete": "删除条目",
@@ -596,6 +615,13 @@
         "button": "预览",
         "noNotes": "未找到内置发行说明",
         "error": "无法预览发行说明"
+      },
+      "onboardingPreview": {
+        "title": "预览新手引导",
+        "description": "预览新手引导界面，而不更改权限、模型或完成状态",
+        "permissionsButton": "权限",
+        "modelsButton": "模型选择",
+        "exitButton": "退出预览"
       }
     },
     "about": {
@@ -739,7 +765,8 @@
   },
   "overlay": {
     "transcribing": "正在转录...",
-    "processing": "处理中..."
+    "processing": "处理中...",
+    "loadingModel": "正在加载模型..."
   },
   "whatsNew": {
     "title": "Handy v{{version}} 新功能"

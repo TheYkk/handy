@@ -400,6 +400,15 @@
       "fillerWordRemoval": {
         "title": "Opvulwoorden verwijderen",
         "description": "Verwijdert veelvoorkomende aarzelwoorden uit transcripties. Schakel dit uit om ze te behouden."
+      },
+      "chineseScript": {
+        "title": "Chinees schrift",
+        "description": "Schrijft Mandarijn- en Kantonese transcripties in vereenvoudigde of traditionele karakters. Andere talen blijven ongewijzigd.",
+        "options": {
+          "asTranscribed": "Zoals getranscribeerd",
+          "simplified": "Vereenvoudigd",
+          "traditional": "Traditioneel"
+        }
       }
     },
     "postProcessing": {
@@ -407,10 +416,18 @@
         "title": "Sneltoets"
       },
       "api": {
-        "title": "API (OpenAI-compatibel)",
+        "title": "API",
         "provider": {
           "title": "Provider",
-          "description": "Selecteer een OpenAI-compatibele provider."
+          "description": "Selecteer een OpenAI- of Anthropic-compatibele provider."
+        },
+        "apiFormat": {
+          "title": "API-indeling",
+          "description": "Verzoekindeling die door je aangepaste eindpunt wordt verwacht.",
+          "options": {
+            "openai": "OpenAI-compatibel (Chat Completions)",
+            "anthropic": "Anthropic Messages"
+          }
         },
         "appleIntelligence": {
           "unavailable": "Apple Intelligence is niet beschikbaar op dit apparaat. Vereist een Apple Silicon Mac met macOS Tahoe (26.0) of nieuwer waarop Apple Intelligence is ingeschakeld via de Systeeminstellingen."
@@ -418,7 +435,8 @@
         "baseUrl": {
           "title": "Basis-URL",
           "description": "API-basis-URL voor de geselecteerde provider. Alleen de aangepaste provider kan worden bewerkt.",
-          "placeholder": "https://api.openai.com/v1"
+          "placeholder": "https://api.openai.com/v1",
+          "placeholderAnthropic": "https://api.anthropic.com/v1"
         },
         "apiKey": {
           "title": "API-sleutel",
@@ -462,6 +480,7 @@
       "loading": "Geschiedenis laden...",
       "empty": "Nog geen transcripties. Start met opnemen om je geschiedenis op te bouwen!",
       "copyToClipboard": "Transcriptie naar klembord kopiëren",
+      "copyError": "Transcriptie naar het klembord kopiëren mislukt.",
       "save": "Transcriptie opslaan",
       "unsave": "Verwijderen uit opgeslagen",
       "delete": "Item verwijderen",
@@ -503,6 +522,13 @@
         "button": "Voorbeeld",
         "noNotes": "Geen meegeleverde release-notes gevonden",
         "error": "Voorbeeld van release-notes laden mislukt"
+      },
+      "onboardingPreview": {
+        "title": "Voorbeeld van onboarding",
+        "description": "Bekijk de onboardingschermen zonder machtigingen, modellen of de voltooiingsstatus te wijzigen",
+        "permissionsButton": "Machtigingen",
+        "modelsButton": "Modelselectie",
+        "exitButton": "Voorbeeld sluiten"
       },
       "soundTheme": {
         "label": "Geluidsthema",
@@ -742,7 +768,8 @@
   },
   "overlay": {
     "transcribing": "Transcriberen...",
-    "processing": "Verwerken..."
+    "processing": "Verwerken...",
+    "loadingModel": "Model laden..."
   },
   "secureInput": {
     "blockedWithCulprit_one": "{{name}} blokkeert mogelijk 1 sneltoets",

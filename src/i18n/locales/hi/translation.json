@@ -400,6 +400,15 @@
       "fillerWordRemoval": {
         "title": "फिलर शब्द हटाएं",
         "description": "ट्रांसक्रिप्शन से आम हिचकिचाहट वाले शब्द हटाता है। उन्हें बनाए रखने के लिए इसे बंद करें।"
+      },
+      "chineseScript": {
+        "title": "चीनी लिपि",
+        "description": "मंदारिन और कैंटोनीज़ ट्रांसक्रिप्शन को सरलीकृत या पारंपरिक अक्षरों में लिखता है। अन्य भाषाएँ अपरिवर्तित रहती हैं।",
+        "options": {
+          "asTranscribed": "जैसा ट्रांसक्राइब हुआ",
+          "simplified": "सरलीकृत",
+          "traditional": "पारंपरिक"
+        }
       }
     },
     "postProcessing": {
@@ -407,10 +416,18 @@
         "title": "हॉटकी"
       },
       "api": {
-        "title": "API (OpenAI संगत)",
+        "title": "API",
         "provider": {
           "title": "प्रोवाइडर",
-          "description": "कोई OpenAI-संगत प्रोवाइडर चुनें."
+          "description": "कोई OpenAI-संगत या Anthropic-संगत प्रोवाइडर चुनें."
+        },
+        "apiFormat": {
+          "title": "API फ़ॉर्मेट",
+          "description": "वह अनुरोध फ़ॉर्मेट जो आपके कस्टम एंडपॉइंट को चाहिए.",
+          "options": {
+            "openai": "OpenAI संगत (Chat Completions)",
+            "anthropic": "Anthropic Messages"
+          }
         },
         "appleIntelligence": {
           "unavailable": "Apple Intelligence इस डिवाइस पर उपलब्ध नहीं है. इसके लिए macOS Tahoe (26.0) या उसके बाद का वर्शन चलाने वाला Apple Silicon Mac चाहिए, जिसमें System Settings में Apple Intelligence चालू हो."
@@ -418,7 +435,8 @@
         "baseUrl": {
           "title": "बेस URL",
           "description": "चुने गए प्रोवाइडर के लिए API बेस URL. केवल कस्टम प्रोवाइडर में बदलाव किया जा सकता है.",
-          "placeholder": "https://api.openai.com/v1"
+          "placeholder": "https://api.openai.com/v1",
+          "placeholderAnthropic": "https://api.anthropic.com/v1"
         },
         "apiKey": {
           "title": "API कुंजी",
@@ -462,6 +480,7 @@
       "loading": "इतिहास लोड हो रहा है...",
       "empty": "अभी तक कोई ट्रांसक्रिप्शन नहीं है. अपना इतिहास बनाने के लिए रिकॉर्डिंग शुरू करें!",
       "copyToClipboard": "ट्रांसक्रिप्शन क्लिपबोर्ड पर कॉपी करें",
+      "copyError": "ट्रांसक्रिप्शन को क्लिपबोर्ड पर कॉपी नहीं किया जा सका.",
       "save": "ट्रांसक्रिप्शन सेव करें",
       "unsave": "सेव किए गए से हटाएं",
       "delete": "एंट्री हटाएं",
@@ -503,6 +522,13 @@
         "button": "झलक देखें",
         "noNotes": "बंडल की गई कोई रिलीज़ नोट नहीं मिली",
         "error": "रिलीज़ नोट की झलक नहीं दिखाई जा सकी"
+      },
+      "onboardingPreview": {
+        "title": "शुरुआती सेटअप की झलक",
+        "description": "अनुमतियों, मॉडल या पूर्णता स्थिति को बदले बिना शुरुआती सेटअप स्क्रीन की झलक देखें",
+        "permissionsButton": "अनुमतियाँ",
+        "modelsButton": "मॉडल चयन",
+        "exitButton": "झलक से बाहर निकलें"
       },
       "soundTheme": {
         "label": "साउंड थीम",
@@ -742,7 +768,8 @@
   },
   "overlay": {
     "transcribing": "ट्रांसक्राइब हो रहा है...",
-    "processing": "प्रोसेस हो रहा है..."
+    "processing": "प्रोसेस हो रहा है...",
+    "loadingModel": "मॉडल लोड हो रहा है..."
   },
   "secureInput": {
     "blockedWithCulprit_one": "{{name}} शायद 1 शॉर्टकट को ब्लॉक कर रहा है",

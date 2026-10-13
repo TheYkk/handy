@@ -400,6 +400,15 @@
       "fillerWordRemoval": {
         "title": "Удалять слова-паразиты",
         "description": "Удаляет распространённые слова-заминки из расшифровок. Отключите, чтобы сохранить их."
+      },
+      "chineseScript": {
+        "title": "Китайская письменность",
+        "description": "Записывает транскрипции на путунхуа и кантонском упрощёнными или традиционными иероглифами. Другие языки не изменяются.",
+        "options": {
+          "asTranscribed": "Как распознано",
+          "simplified": "Упрощённые",
+          "traditional": "Традиционные"
+        }
       }
     },
     "postProcessing": {
@@ -407,10 +416,18 @@
         "title": "Горячая клавиша"
       },
       "api": {
-        "title": "API (совместимый с OpenAI)",
+        "title": "API",
         "provider": {
           "title": "Поставщик",
-          "description": "Выберите поставщика, совместимого с OpenAI."
+          "description": "Выберите поставщика, совместимого с OpenAI или Anthropic."
+        },
+        "apiFormat": {
+          "title": "Формат API",
+          "description": "Формат запроса, ожидаемый вашей пользовательской конечной точкой.",
+          "options": {
+            "openai": "Совместимый с OpenAI (Chat Completions)",
+            "anthropic": "Anthropic Messages"
+          }
         },
         "appleIntelligence": {
           "unavailable": "Apple Intelligence недоступен на этом устройстве. Требуется Apple Silicon Mac под управлением macOS Tahoe (26.0) или более поздней версии с включенным Apple Intelligence в настройках системы."
@@ -418,7 +435,8 @@
         "baseUrl": {
           "title": "Базовый URL",
           "description": "Базовый URL-адрес API для выбранного провайдера. Редактировать можно только настраиваемого поставщика.",
-          "placeholder": "https://api.openai.com/v1"
+          "placeholder": "https://api.openai.com/v1",
+          "placeholderAnthropic": "https://api.anthropic.com/v1"
         },
         "apiKey": {
           "title": "API-ключ",
@@ -462,6 +480,7 @@
       "loading": "Загрузка истории...",
       "empty": "Транскрипций пока нет. Начните запись, чтобы создать свою историю!",
       "copyToClipboard": "Скопировать транскрипцию в буфер обмена",
+      "copyError": "Не удалось скопировать транскрипцию в буфер обмена.",
       "save": "Сохранить транскрипцию",
       "unsave": "Удалить из сохраненных",
       "delete": "Удалить запись",
@@ -596,6 +615,13 @@
         "button": "Предпросмотр",
         "noNotes": "Встроенные примечания к выпуску не найдены",
         "error": "Не удалось показать предварительный просмотр примечаний к выпуску"
+      },
+      "onboardingPreview": {
+        "title": "Предпросмотр первоначальной настройки",
+        "description": "Просмотрите экраны первоначальной настройки, не изменяя разрешения, модели или статус завершения",
+        "permissionsButton": "Разрешения",
+        "modelsButton": "Выбор модели",
+        "exitButton": "Выйти из предпросмотра"
       }
     },
     "about": {
@@ -739,7 +765,8 @@
   },
   "overlay": {
     "transcribing": "Расшифровка...",
-    "processing": "Обработка..."
+    "processing": "Обработка...",
+    "loadingModel": "Загрузка модели..."
   },
   "whatsNew": {
     "title": "Новое в Handy v{{version}}"

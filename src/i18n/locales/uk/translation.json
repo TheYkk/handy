@@ -400,6 +400,15 @@
       "fillerWordRemoval": {
         "title": "Видаляти слова-паразити",
         "description": "Видаляє поширені слова-вагання з транскрипцій. Вимкніть, щоб зберегти їх."
+      },
+      "chineseScript": {
+        "title": "Китайська писемність",
+        "description": "Записує транскрипції мандаринською та кантонською спрощеними або традиційними ієрогліфами. Інші мови не змінюються.",
+        "options": {
+          "asTranscribed": "Як розпізнано",
+          "simplified": "Спрощені",
+          "traditional": "Традиційні"
+        }
       }
     },
     "postProcessing": {
@@ -407,10 +416,18 @@
         "title": "Гаряча клавіша"
       },
       "api": {
-        "title": "API (сумісний з OpenAI)",
+        "title": "API",
         "provider": {
           "title": "Провайдер",
-          "description": "Оберіть OpenAI-сумісного провайдера"
+          "description": "Оберіть OpenAI- або Anthropic-сумісного провайдера"
+        },
+        "apiFormat": {
+          "title": "Формат API",
+          "description": "Формат запиту, який очікує ваш ендпоінт.",
+          "options": {
+            "openai": "Сумісний з OpenAI (Chat Completions)",
+            "anthropic": "Anthropic Messages"
+          }
         },
         "appleIntelligence": {
           "unavailable": "Apple Intelligence недоступний на цьому пристрої. Потрібен Mac з Apple Silicon під управлінням macOS Tahoe (26.0) або новіше з увімкненим Apple Intelligence в Системних налаштуваннях."
@@ -418,7 +435,8 @@
         "baseUrl": {
           "title": "Базова URL-адреса",
           "description": "Базова URL-адреса API для обраного провайдера. Лише власний провайдер можна редагувати.",
-          "placeholder": "https://api.openai.com/v1"
+          "placeholder": "https://api.openai.com/v1",
+          "placeholderAnthropic": "https://api.anthropic.com/v1"
         },
         "apiKey": {
           "title": "API-ключ",
@@ -462,6 +480,7 @@
       "loading": "Завантаження історії...",
       "empty": "Транскрипцій поки немає. Почніть запис, щоб створити історію!",
       "copyToClipboard": "Копіювати транскрипцію в буфер обміну",
+      "copyError": "Не вдалося скопіювати транскрипцію в буфер обміну.",
       "save": "Зберегти транскрипцію",
       "unsave": "Видалити зі збережених",
       "delete": "Видалити запис",
@@ -596,6 +615,13 @@
         "button": "Перегляд",
         "noNotes": "Вбудовані примітки до випуску не знайдено",
         "error": "Не вдалося переглянути примітки до випуску"
+      },
+      "onboardingPreview": {
+        "title": "Попередній перегляд початкового налаштування",
+        "description": "Перегляньте екрани початкового налаштування, не змінюючи дозволи, моделі чи стан завершення",
+        "permissionsButton": "Дозволи",
+        "modelsButton": "Вибір моделі",
+        "exitButton": "Вийти з перегляду"
       }
     },
     "about": {
@@ -739,7 +765,8 @@
   },
   "overlay": {
     "transcribing": "Обробка...",
-    "processing": "Постобробка..."
+    "processing": "Постобробка...",
+    "loadingModel": "Завантаження моделі..."
   },
   "whatsNew": {
     "title": "Нове в Handy v{{version}}"
